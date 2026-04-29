@@ -7,6 +7,3 @@
 
 /js/*
   Cache-Control: public, max-age=31536000, immutable
-
-/20.csv
-  Cache-Control: public, max-age=300
