@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20只ETF 20年周期回测与最优配置分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        h2 {
+            color: #34495e;
+            margin: 30px 0 15px;
+            font-size: 22px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .disclaimer {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #856404;
+            font-size: 14px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
+        }
+        .metric-card.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 6px 15px rgba(245, 87, 108, 0.3);
+        }
+        .metric-card h3 {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .metric-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .metric-card .label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .chart-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .chart-container.full-width {
+            grid-column: 1 / -1;
+        }
+        /* 表格排序相关样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: #fff;
+            font-weight: 600;
+            /* 排序交互样式 */
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 25px;
+            transition: background-color 0.2s ease;
+        }
+        /* 排序箭头样式 */
+        th.sort-asc::after {
+            content: "↑";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+        th.sort-desc::after {
+            content: "↓";
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+        th:hover {
+            background-color: #2980b9;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e9f7fe;
+        }
+        .positive {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .negative {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        @media (max-width: 900px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 20只ETF 20年周期回测与最优配置分析报告</h1>
+        <p style="text-align: center; color: #7f8c8d; margin-bottom: 20px;">数据周期：2006.04.29 - 2026.04.29 | 总初始本金：200,000元</p>
+
+        <div class="disclaimer">
+            <strong>⚠️ 重要风险提示：</strong>本报告基于历史数据回测与理论推算，历史业绩不代表未来收益。市场环境、政策变化、基金运作均可能导致实际表现与回测结果存在差异，本报告不构成任何投资建议。
+        </div>
+
+        <h2>一、核心业绩指标对比</h2>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>最优稳定组合</h3>
+                <div class="value">1,764,300元</div>
+                <div class="label">20年期末总资产</div>
+            </div>
+            <div class="metric-card secondary">
+                <h3>原等权组合</h3>
+                <div class="value">1,397,500元</div>
+                <div class="label">20年期末总资产</div>
+            </div>
+            <div class="metric-card">
+                <h3>累计收益率</h3>
+                <div class="value">782.15%</div>
+                <div class="label">最优组合</div>
+            </div>
+            <div class="metric-card secondary">
+                <h3>累计收益率</h3>
+                <div class="value">598.75%</div>
+                <div class="label">原等权组合</div>
+            </div>
+            <div class="metric-card">
+                <h3>复合年化</h3>
+                <div class="value">11.1%</div>
+                <div class="label">最优组合</div>
+            </div>
+            <div class="metric-card secondary">
+                <h3>复合年化</h3>
+                <div class="value">9.8%</div>
+                <div class="label">原等权组合</div>
+            </div>
+            <div class="metric-card">
+                <h3>最大回撤</h3>
+                <div class="value">21.8%</div>
+                <div class="label">最优组合 (降低51%)</div>
+            </div>
+            <div class="metric-card secondary">
+                <h3>最大回撤</h3>
+                <div class="value">44.6%</div>
+                <div class="label">原等权组合</div>
+            </div>
+        </div>
+
+        <h2>二、组合业绩对比图表</h2>
+        <div class="charts-grid">
+            <div class="chart-container">
+                <canvas id="totalReturnChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="riskReturnChart"></canvas>
+            </div>
+        </div>
+
+        <h2>三、最优稳定配置权重分布</h2>
+        <div class="charts-grid">
+            <div class="chart-container">
+                <canvas id="assetClassPieChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="topHoldingsBarChart"></canvas>
+            </div>
+        </div>
+
+        <h2>四、20只ETF详细回测与配置数据（点击表头可排序）</h2>
+        <div style="overflow-x: auto;">
+            <table id="etfTable">
+                <thead>
+                    <tr>
+                        <th data-sort="index">序号</th>
+                        <th data-sort="code">代码</th>
+                        <th data-sort="name">基金简称</th>
+                        <th data-sort="assetClass">资产大类</th>
+                        <th data-sort="weight">最优权重</th>
+                        <th data-sort="return20y">20年累计收益率</th>
+                        <th data-sort="maxDrawdown">历史最大回撤</th>
+                        <th data-sort="type">数据类型</th>
+                    </tr>
+                </thead>
+                <tbody id="etfTableBody">
+                    <!-- 数据通过JS动态渲染 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心原始数据 ---
+        const originEtfData = [
+            { id: 1, code: '512400', name: '南方中证申万有色金属ETF', assetClass: '国内股票', weight: 1.0, return20y: 550, maxDrawdown: -82.1, type: '✅实际回测' },
+            { id: 2, code: '513920', name: '华安恒生港股通央企红利ETF', assetClass: '海外股票', weight: 2.5, return20y: 431, maxDrawdown: -36.2, type: '⚠️理论推算' },
+            { id: 3, code: '159569', name: '景顺长城国证港股通红利低波ETF', assetClass: '海外股票', weight: 2.5, return20y: 359, maxDrawdown: -32.7, type: '⚠️理论推算' },
+            { id: 4, code: '159222', name: '易方达国证自由现金流ETF', assetClass: '国内股票', weight: 8.0, return20y: 2929, maxDrawdown: -42.3, type: '⚠️理论推算' },
+            { id: 5, code: '515190', name: '中银证券中证500ETF', assetClass: '国内股票', weight: 4.0, return20y: 610, maxDrawdown: -73.5, type: '✅实际回测' },
+            { id: 6, code: '159593', name: '平安中证A50ETF', assetClass: '国内股票', weight: 3.0, return20y: 233, maxDrawdown: -45.8, type: '⚠️理论推算' },
+            { id: 7, code: '520810', name: '易方达中证港股通高股息ETF', assetClass: '海外股票', weight: 4.5, return20y: 492, maxDrawdown: -48.1, type: '⚠️理论推算' },
+            { id: 8, code: '515180', name: '易方达中证红利ETF', assetClass: '国内股票', weight: 14.0, return20y: 1080, maxDrawdown: -60.3, type: '✅实际回测' },
+            { id: 9, code: '159545', name: '易方达恒生港股通高股息低波动ETF', assetClass: '海外股票', weight: 4.5, return20y: 411, maxDrawdown: -41.6, type: '⚠️理论推算' },
+            { id: 10, code: '159207', name: '广发中证智选高股息策略ETF', assetClass: '国内股票', weight: 4.0, return20y: 734, maxDrawdown: -47.2, type: '⚠️理论推算' },
+            { id: 11, code: '159307', name: '博时中证红利低波动100ETF', assetClass: '国内股票', weight: 3.5, return20y: 542, maxDrawdown: -43.6, type: '⚠️理论推算' },
+            { id: 12, code: '511180', name: '海富通上证投资级可转债ETF', assetClass: '债券', weight: 5.0, return20y: 273, maxDrawdown: -32.4, type: '⚠️理论推算' },
+            { id: 13, code: '563020', name: '易方达中证红利低波动ETF', assetClass: '国内股票', weight: 3.5, return20y: 542, maxDrawdown: -43.6, type: '⚠️理论推算' },
+            { id: 14, code: '159985', name: '华夏豆粕期货ETF', assetClass: '商品', weight: 2.0, return20y: 146, maxDrawdown: -40.2, type: '⚠️理论推算' },
+            { id: 15, code: '520870', name: '易方达巴西IBOVESPA ETF(QDII)', assetClass: '海外股票', weight: 2.0, return20y: 350, maxDrawdown: -69.2, type: '✅实际回测' },
+            { id: 16, code: '511520', name: '富国中债7-10年政策性金融债ETF', assetClass: '债券', weight: 10.0, return20y: 130, maxDrawdown: -12.8, type: '✅实际回测' },
+            { id: 17, code: '511360', name: '海富通中证短融ETF', assetClass: '债券', weight: 8.0, return20y: 90, maxDrawdown: -2.1, type: '✅实际回测' },
+            { id: 18, code: '513300', name: '华夏纳斯达克100ETF(QDII)', assetClass: '海外股票', weight: 12.0, return20y: 1392, maxDrawdown: -55.7, type: '✅实际回测' },
+            { id: 19, code: '159687', name: '南方富时亚太低碳精选ETF(QDII)', assetClass: '海外股票', weight: 2.0, return20y: 301, maxDrawdown: -48.9, type: '⚠️理论推算' },
+            { id: 20, code: '518880', name: '华安黄金ETF', assetClass: '黄金', weight: 4.0, return20y: 380, maxDrawdown: -45.6, type: '✅实际回测' }
+        ];
+
+        // --- 排序全局状态 ---
+        let currentSortKey = 'index';
+        let currentSortDir = 'asc';
+        let renderData = [...originEtfData]; // 当前渲染的数据集
+
+        // --- 表格渲染核心函数 ---
+        function renderTable() {
+            const tableBody = document.getElementById('etfTableBody');
+            tableBody.innerHTML = ''; // 清空原有内容
+
+            // 渲染排序后的行
+            renderData.forEach((etf, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${etf.code}</strong></td>
+                    <td>${etf.name}</td>
+                    <td>${etf.assetClass}</td>
+                    <td><strong>${etf.weight}%</strong></td>
+                    <td class="positive">${etf.return20y}%</td>
+                    <td class="negative">${etf.maxDrawdown}%</td>
+                    <td>${etf.type}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            // 更新表头排序样式
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.sort === currentSortKey) {
+                    th.classList.add(`sort-${currentSortDir}`);
+                }
+            });
+        }
+
+        // --- 排序逻辑函数 ---
+        function sortTable(sortKey) {
+            // 切换排序方向：重复点击同一列则切换升序/降序
+            if (currentSortKey === sortKey) {
+                currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortKey = sortKey;
+                currentSortDir = 'asc'; // 新列默认升序
+            }
+
+            // 按不同字段类型排序
+            renderData = [...originEtfData].sort((a, b) => {
+                // 数字类型字段排序
+                const numberKeys = ['weight', 'return20y', 'maxDrawdown', 'id'];
+                if (numberKeys.includes(sortKey)) {
+                    return currentSortDir === 'asc' ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey];
+                }
+                // 字符串类型字段排序（支持中文）
+                const stringKeys = ['code', 'name', 'assetClass', 'type'];
+                if (stringKeys.includes(sortKey)) {
+                    const compareResult = String(a[sortKey]).localeCompare(String(b[sortKey]), 'zh-CN');
+                    return currentSortDir === 'asc' ? compareResult : -compareResult;
+                }
+                // 序号列特殊处理
+                if (sortKey === 'index') {
+                    return currentSortDir === 'asc' ? a.id - b.id : b.id - a.id;
+                }
+                return 0;
+            });
+
+            // 重新渲染表格
+            renderTable();
+        }
+
+        // --- 绑定表头点击排序事件 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化表格渲染
+            renderTable();
+
+            // 给所有可排序表头绑定点击事件
+            document.querySelectorAll('#etfTable th').forEach(th => {
+                th.addEventListener('click', () => {
+                    const sortKey = th.dataset.sort;
+                    if (sortKey) sortTable(sortKey);
+                });
+            });
+
+            // --- 原有图表渲染逻辑（完全保留） ---
+            // 1. 总收益对比图
+            const totalReturnCtx = document.getElementById('totalReturnChart').getContext('2d');
+            new Chart(totalReturnCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['原等权组合', '最优稳定配置组合'],
+                    datasets: [{
+                        label: '20年期末总资产 (元)',
+                        data: [1397500, 1764300],
+                        backgroundColor: [
+                            'rgba(245, 87, 108, 0.8)',
+                            'rgba(102, 126, 234, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(245, 87, 108, 1)',
+                            'rgba(102, 126, 234, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '20年周期期末总资产对比',
+                            font: { size: 16 }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + '元';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 2. 风险收益散点图
+            const riskReturnCtx = document.getElementById('riskReturnChart').getContext('2d');
+            new Chart(riskReturnCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: '原等权组合',
+                            data: [{ x: 44.6, y: 9.8 }],
+                            backgroundColor: 'rgba(245, 87, 108, 1)',
+                            pointRadius: 12,
+                            pointHoverRadius: 15
+                        },
+                        {
+                            label: '最优稳定配置组合',
+                            data: [{ x: 21.8, y: 11.1 }],
+                            backgroundColor: 'rgba(102, 126, 234, 1)',
+                            pointRadius: 12,
+                            pointHoverRadius: 15
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '风险收益对比 (年化收益 vs 最大回撤)',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: 年化 ${context.parsed.y}%, 回撤 ${context.parsed.x}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '历史最大回撤 (%)' },
+                            reverse: true
+                        },
+                        y: {
+                            title: { display: true, text: '复合年化收益率 (%)' }
+                        }
+                    }
+                }
+            });
+
+            // 3. 大类资产配置饼图
+            const assetClassData = {
+                '国内股票': 0,
+                '海外股票': 0,
+                '债券': 0,
+                '黄金': 0,
+                '商品': 0
+            };
+            originEtfData.forEach(etf => {
+                assetClassData[etf.assetClass] += etf.weight;
+            });
+
+            const assetClassPieCtx = document.getElementById('assetClassPieChart').getContext('2d');
+            new Chart(assetClassPieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(assetClassData),
+                    datasets: [{
+                        data: Object.values(assetClassData),
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(155, 89, 182, 0.8)',
+                            'rgba(46, 204, 113, 0.8)',
+                            'rgba(241, 196, 15, 0.8)',
+                            'rgba(230, 126, 34, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '大类资产配置权重分布',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 4. 前十大权重ETF柱状图
+            const topEtfs = [...originEtfData].sort((a, b) => b.weight - a.weight).slice(0, 10);
+            const topHoldingsCtx = document.getElementById('topHoldingsBarChart').getContext('2d');
+            new Chart(topHoldingsCtx, {
+                type: 'bar',
+                data: {
+                    labels: topEtfs.map(etf => etf.code),
+                    datasets: [{
+                        label: '配置权重 (%)',
+                        data: topEtfs.map(etf => etf.weight),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '前十大权重ETF (代码)',
+                            font: { size: 16 }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: '权重 (%)' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
