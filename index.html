@@ -2,7 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="color-scheme" content="dark">
     <title>20只ETF 20年周期回测与最优配置分析报告</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,20 +39,32 @@
             --container-max: 1200px;
             --container-pad: 24px;
             --nav-height: 56px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
             --transition-fast: 0.2s ease;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html { font-size: 15px; }
+        html {
+            font-size: 15px;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
 
         body {
             min-height: 100vh;
+            min-height: 100dvh;
             background: var(--bg-primary);
             color: var(--text-primary);
             font-family: var(--font-sans);
             line-height: 1.6;
-            padding-top: var(--nav-height);
+            padding-top: calc(var(--nav-height) + var(--safe-top));
+            padding-bottom: max(16px, var(--safe-bottom));
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
             position: relative;
         }
 
@@ -72,7 +86,11 @@
         .topnav {
             position: fixed;
             inset: 0 0 auto 0;
-            height: var(--nav-height);
+            min-height: var(--nav-height);
+            height: auto;
+            padding-top: var(--safe-top);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
             background: var(--overlay-nav-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -81,9 +99,9 @@
         }
         .topnav-inner {
             max-width: var(--container-max);
-            height: 100%;
+            min-height: var(--nav-height);
             margin: 0 auto;
-            padding: 0 var(--container-pad);
+            padding: 10px var(--container-pad);
             display: flex;
             align-items: center;
             gap: 24px;
@@ -135,6 +153,7 @@
             max-width: var(--container-max);
             margin: 0 auto;
             padding: 28px var(--container-pad) 72px;
+            padding-bottom: max(72px, calc(var(--safe-bottom) + 48px));
             position: relative;
             z-index: 1;
         }
@@ -251,6 +270,8 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-2xl);
             padding: 20px 18px;
+            position: relative;
+            min-height: 0;
         }
         .chart-container.full-width { grid-column: 1 / -1; }
 
@@ -259,10 +280,13 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-2xl);
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
             margin-top: 8px;
         }
         .panel-table {
             width: 100%;
+            min-width: 720px;
             border-collapse: collapse;
             font-size: 0.82rem;
         }
@@ -286,6 +310,10 @@
         .panel-table thead th:hover {
             color: var(--gold);
             background: rgba(26, 34, 52, 0.98);
+        }
+        .panel-table thead th:active {
+            background: rgba(26, 34, 52, 0.98);
+            color: var(--gold);
         }
         .panel-table thead th.sort-asc::after,
         .panel-table thead th.sort-desc::after {
@@ -313,9 +341,85 @@
         .pct-down-num { color: var(--market-down); font-weight: 600; }
         .drawdown-num { color: var(--warn); font-weight: 600; }
 
+        /* ≥641px：固定顶栏单行，避免增高而 body 仍按 56px 占位造成重叠 */
+        @media (min-width: 641px) {
+            .topnav-inner {
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+            .topnav-meta {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                max-width: min(560px, 45vw);
+            }
+            .topnav-meta::-webkit-scrollbar {
+                display: none;
+            }
+            .brand { flex-shrink: 0; }
+        }
+
+        /* 移动端 / 平板：单行指标卡、留白与触摸区域 */
         @media (max-width: 900px) {
             .charts-grid { grid-template-columns: 1fr; }
             .topnav-meta { margin-left: 0; width: 100%; }
+            .topnav-chip { flex: 1 1 calc(50% - 8px); min-width: 0; }
+        }
+
+        @media (max-width: 640px) {
+            html { font-size: 14px; }
+            :root { --container-pad: 14px; }
+            /* 狭屏用 sticky：顶栏随内容增高，不参与 body 占位 */
+            .topnav {
+                position: sticky;
+                top: 0;
+                padding-top: var(--safe-top);
+            }
+
+            body { padding-top: var(--safe-top); }
+
+            .topnav-inner { gap: 12px 16px; padding: 12px var(--container-pad); align-items: flex-start; }
+            .brand { font-size: 0.72rem; letter-spacing: 0.06em; }
+            .topnav-meta {
+                gap: 8px;
+            }
+            .topnav-chip {
+                padding: 8px 10px;
+                flex: 1 1 calc(50% - 6px);
+                white-space: normal;
+                min-height: 44px;
+            }
+            .topnav-chip span.val {
+                font-size: 0.78rem;
+                line-height: 1.35;
+                word-break: break-all;
+            }
+
+            .page-hero h1 { letter-spacing: 0.06em; }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .value { font-size: 1.35rem; }
+
+            .chart-container { padding: 14px 12px; }
+
+            .panel-table { font-size: 0.78rem; }
+            .panel-table thead th,
+            .panel-table tbody td {
+                padding: 12px 8px;
+            }
+            .panel-table thead th {
+                padding-right: 28px;
+                min-height: 44px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .brand { letter-spacing: 0.05em; }
         }
     </style>
 </head>
@@ -572,11 +676,41 @@
                 });
             });
 
-            // --- Chart.js：与深色看盘主题一致（对齐 panel-preview 色板）
-            const titleStyle = { display: true, color: '#e8edf5', font: { size: 14, weight: '600' } };
-            const axisCommon = {
-                grid: { color: 'rgba(30, 45, 69, 0.9)', drawBorder: false },
-                ticks: { color: '#8896ab' }
+            // --- Chart.js：与深色看盘主题一致；小屏压缩标题与刻度，便于一屏可读
+            const mqNarrow = typeof matchMedia !== 'undefined' ? matchMedia('(max-width: 640px)') : null;
+            const chartNarrow = mqNarrow && mqNarrow.matches;
+            const titleStyle = {
+                display: true,
+                color: '#e8edf5',
+                font: { size: chartNarrow ? 12 : 14, weight: '600' }
+            };
+            const legendLabelStyle = chartNarrow
+                ? { color: '#8896ab', padding: 10, font: { size: 11 }, boxWidth: 12 }
+                : { color: '#8896ab', padding: 14 };
+            const scatterLegendStyle = chartNarrow
+                ? { color: '#8896ab', padding: 10, font: { size: 11 }, boxWidth: 12 }
+                : { color: '#8896ab', padding: 16 };
+            const axisTitle = (txt) =>
+                chartNarrow
+                    ? { display: true, text: txt, color: '#8896ab', font: { size: 10 } }
+                    : { display: true, text: txt, color: '#8896ab' };
+            const tickFontSize = chartNarrow ? 10 : 12;
+            const axisGrid = {
+                grid: { color: 'rgba(30, 45, 69, 0.9)', drawBorder: false }
+            };
+            /** 类目轴：小屏适度倾斜避免挤成一列 */
+            const axisTicksCategorical = {
+                ...axisGrid,
+                ticks: {
+                    color: '#8896ab',
+                    maxRotation: chartNarrow ? 40 : 0,
+                    font: { size: tickFontSize }
+                }
+            };
+            /** 数值轴：保持水平刻度 */
+            const axisTicksNumeric = {
+                ...axisGrid,
+                ticks: { color: '#8896ab', maxRotation: 0, font: { size: tickFontSize } }
             };
 
             // 1. 总收益对比图
@@ -602,6 +736,8 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: chartNarrow ? 1.05 : 1.6,
                     plugins: {
                         title: {
                             ...titleStyle,
@@ -611,16 +747,18 @@
                     },
                     scales: {
                         x: {
-                            ticks: axisCommon.ticks,
+                            ticks: axisTicksCategorical.ticks,
                             grid: { display: false }
                         },
                         y: {
                             beginAtZero: true,
-                            ...axisCommon,
+                            grid: axisTicksNumeric.grid,
                             ticks: {
-                                ...axisCommon.ticks,
+                                ...axisTicksNumeric.ticks,
                                 callback: function(value) {
-                                    return value.toLocaleString() + ' 元';
+                                    return typeof value === 'number'
+                                        ? value.toLocaleString() + ' 元'
+                                        : value;
                                 }
                             }
                         }
@@ -640,8 +778,8 @@
                             backgroundColor: 'rgba(59, 138, 138, 0.95)',
                             borderColor: 'rgba(59, 138, 138, 1)',
                             borderWidth: 1,
-                            pointRadius: 12,
-                            pointHoverRadius: 15
+                            pointRadius: chartNarrow ? 9 : 12,
+                            pointHoverRadius: chartNarrow ? 11 : 15
                         },
                         {
                             label: '最优稳定配置组合',
@@ -649,13 +787,15 @@
                             backgroundColor: 'rgba(201, 168, 76, 0.95)',
                             borderColor: 'rgba(201, 168, 76, 1)',
                             borderWidth: 1,
-                            pointRadius: 12,
-                            pointHoverRadius: 15
+                            pointRadius: chartNarrow ? 9 : 12,
+                            pointHoverRadius: chartNarrow ? 11 : 15
                         }
                     ]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: chartNarrow ? 0.92 : 1.15,
                     plugins: {
                         title: {
                             ...titleStyle,
@@ -663,7 +803,7 @@
                         },
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#8896ab', padding: 16 }
+                            labels: scatterLegendStyle
                         },
                         tooltip: {
                             callbacks: {
@@ -675,13 +815,13 @@
                     },
                     scales: {
                         x: {
-                            title: { display: true, text: '历史最大回撤 (%)', color: '#8896ab' },
+                            title: axisTitle('历史最大回撤 (%)'),
                             reverse: true,
-                            ...axisCommon
+                            ...axisTicksNumeric
                         },
                         y: {
-                            title: { display: true, text: '复合年化收益率 (%)', color: '#8896ab' },
-                            ...axisCommon
+                            title: axisTitle('复合年化收益率 (%)'),
+                            ...axisTicksNumeric
                         }
                     }
                 }
@@ -719,7 +859,9 @@
                 },
                 options: {
                     responsive: true,
-                    cutout: '52%',
+                    maintainAspectRatio: true,
+                    aspectRatio: chartNarrow ? 1 : 1.35,
+                    cutout: chartNarrow ? '48%' : '52%',
                     plugins: {
                         title: {
                             ...titleStyle,
@@ -727,7 +869,7 @@
                         },
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#8896ab', padding: 14 }
+                            labels: legendLabelStyle
                         },
                         tooltip: {
                             callbacks: {
@@ -759,6 +901,8 @@
                 options: {
                     indexAxis: 'y',
                     responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: chartNarrow ? 0.85 : 1.15,
                     plugins: {
                         title: {
                             ...titleStyle,
@@ -769,12 +913,12 @@
                     scales: {
                         x: {
                             beginAtZero: true,
-                            title: { display: true, text: '权重 (%)', color: '#8896ab' },
-                            ...axisCommon
+                            title: axisTitle('权重 (%)'),
+                            ...axisTicksNumeric
                         },
                         y: {
-                            ...axisCommon,
-                            ticks: { ...axisCommon.ticks, autoSkip: false }
+                            grid: axisTicksNumeric.grid,
+                            ticks: { ...axisTicksNumeric.ticks, autoSkip: false }
                         }
                     }
                 }
