@@ -286,7 +286,7 @@
         }
         .panel-table {
             width: 100%;
-            min-width: 720px;
+            min-width: 1080px;
             border-collapse: collapse;
             font-size: 0.82rem;
         }
@@ -447,59 +447,81 @@
     <main class="container">
         <header class="page-hero">
             <h1>20只ETF · 二十年回测与最优配置</h1>
-            <p class="hero-sub">最优稳定组合与原等权组合的关键指标对比，以及单只 ETF 权重与长期风险收益特征摘要。</p>
+            <p class="hero-sub">最优稳定组合与原等权组合的业绩对比摘要；每只 ETF 的<strong>场内简称</strong>与<strong>成立日期</strong>可与公开募集披露核对，长区间业绩仍依赖回测算术与指数代理补全（见风险提示）。</p>
         </header>
 
         <div class="disclaimer" role="note">
             <strong>风险提示：</strong>本报告基于历史数据回测与理论推算，历史业绩不代表未来收益。市场环境、政策变化、基金运作均可能导致实际表现与回测结果存在差异，本报告不构成任何投资建议。
+            <span style="display:block;margin-top:10px;">表格中的<strong>基金简称、成立日期</strong>摘自东方财富·天天基金 ETF 基金档案（页面路径含 <code>tsdata_代码</code>），用于核对产品身份；<strong>报告起点 2006-04-29 早于任一只基金成立日的区间</strong>，业绩只能依赖标的指数或代理序列补全，并非连续真实净值。下列「20 年累计收益率、最大回撤、年化波动率、夏普」等仍为既有回测算术结果，未随公开行情重算。</span>
         </div>
 
         <section class="panel" aria-labelledby="sec-metrics">
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-metrics" class="panel-title">一、核心业绩指标对比</h2>
-                <span class="panel-sub">期末资产、收益率、年化与最大回撤 · 两行对照</span>
+                <span class="panel-sub">期末资产、收益率、年化、最大回撤、夏普比率；回撤持续与修复时间为历史最长片段（月，峰→谷 / 谷→前高）</span>
             </div>
             <div class="metrics-grid">
             <div class="stat-card stat-card--accent">
                 <h3>最优稳定组合</h3>
-                <div class="value mono">¥ 1,850,850</div>
+                <div class="value mono">¥ 1,839,150</div>
                 <div class="label">20年期末总资产</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>原等权组合</h3>
-                <div class="value mono">¥ 1,402,000</div>
+                <div class="value mono">¥ 1,373,100</div>
                 <div class="label">20年期末总资产</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>累计收益率</h3>
-                <div class="value mono">825.43%</div>
+                <div class="value mono">819.58%</div>
                 <div class="label">最优组合</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>累计收益率</h3>
-                <div class="value mono">601.00%</div>
+                <div class="value mono">586.55%</div>
                 <div class="label">原等权组合</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>复合年化</h3>
-                <div class="value mono">11.3%</div>
+                <div class="value mono">11.26%</div>
                 <div class="label">最优组合</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>复合年化</h3>
-                <div class="value mono">9.82%</div>
+                <div class="value mono">9.75%</div>
                 <div class="label">原等权组合</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>最大回撤</h3>
-                <div class="value mono">21.5%</div>
-                <div class="label">最优组合（较等权约降低 52%）</div>
+                <div class="value mono">21.1%</div>
+                <div class="label">最优组合（较等权约降低 52.9%）</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>最大回撤</h3>
-                <div class="value mono">44.8%</div>
+                <div class="value mono">44.9%</div>
                 <div class="label">原等权组合</div>
+            </div>
+            <div class="stat-card stat-card--accent">
+                <h3>夏普比率</h3>
+                <div class="value mono">0.71</div>
+                <div class="label">最优组合</div>
+            </div>
+            <div class="stat-card stat-card--muted">
+                <h3>夏普比率</h3>
+                <div class="value mono">0.37</div>
+                <div class="label">原等权组合</div>
+            </div>
+            <!-- 数值由下方 PORTFOLIO_DRAWDOWN_TIMELINE 注入，与日度净值回测对齐后改脚本即可 -->
+            <div class="stat-card stat-card--accent">
+                <h3>回撤持续 / 修复</h3>
+                <div class="value mono" id="metric-opt-dd-timeline">—</div>
+                <div class="label">最优组合 · 历史最长：峰值→谷底 / 谷底→恢复前高</div>
+            </div>
+            <div class="stat-card stat-card--muted">
+                <h3>回撤持续 / 修复</h3>
+                <div class="value mono" id="metric-ew-dd-timeline">—</div>
+                <div class="label">原等权组合 · 历史最长：峰值→谷底 / 谷底→恢复前高</div>
             </div>
         </div>
         </section>
@@ -540,7 +562,7 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-table" class="panel-title">四、20只ETF详细回测与配置</h2>
-                <span class="panel-sub">点击表头可按列排序</span>
+                <span class="panel-sub">点击表头可按列排序 · 成立日期来源见页首说明</span>
             </div>
             <div class="table-wrap">
                 <table id="etfTable" class="panel-table">
@@ -549,11 +571,14 @@
                             <th data-sort="index">序号</th>
                             <th data-sort="code">代码</th>
                             <th data-sort="name">基金简称</th>
+                            <th data-sort="establish">成立日期</th>
                             <th data-sort="assetClass">资产大类</th>
                             <th data-sort="weight">最优权重</th>
                             <th data-sort="return20y">20年累计收益率</th>
                             <th data-sort="maxDrawdown">历史最大回撤</th>
-                            <th data-sort="type">数据类型</th>
+                            <th data-sort="volatility">年化波动率</th>
+                            <th data-sort="sharpe">夏普比率</th>
+                            <th data-sort="type">口径说明</th>
                         </tr>
                     </thead>
                     <tbody id="etfTableBody">
@@ -565,29 +590,49 @@
     </main>
 
     <script>
-        // --- 核心原始数据 ---
+        // 基金简称 establish：东方财富·天天基金 ETF 档案（fundf10.eastmoney.com/tsdata_代码.html）字段「成立日期」，与行情软件 fS_name 一致
         const originEtfData = [
-            { id: 1, code: '510500', name: '南方中证500ETF', assetClass: '国内股票', weight: 5.0, return20y: 610, maxDrawdown: -73.5, type: '✅实际回测' },
-            { id: 2, code: '159593', name: '平安中证A50ETF', assetClass: '国内股票', weight: 3.0, return20y: 233, maxDrawdown: -45.8, type: '⚠️理论推算' },
-            { id: 3, code: '513300', name: '华夏纳斯达克100ETF(QDII)', assetClass: '海外股票', weight: 12.0, return20y: 1392, maxDrawdown: -55.7, type: '✅实际回测' },
-            { id: 4, code: '520870', name: '易方达巴西IBOVESPA ETF(QDII)', assetClass: '海外股票', weight: 2.0, return20y: 350, maxDrawdown: -69.2, type: '✅实际回测' },
-            { id: 5, code: '159687', name: '南方富时亚太低碳精选ETF(QDII)', assetClass: '海外股票', weight: 2.0, return20y: 301, maxDrawdown: -48.9, type: '⚠️理论推算' },
-            { id: 6, code: '159985', name: '华夏豆粕期货ETF', assetClass: '商品', weight: 2.0, return20y: 146, maxDrawdown: -40.2, type: '⚠️理论推算' },
-            { id: 7, code: '518880', name: '华安黄金ETF', assetClass: '黄金', weight: 4.0, return20y: 380, maxDrawdown: -45.6, type: '✅实际回测' },
-            { id: 8, code: '512400', name: '南方中证申万有色金属ETF', assetClass: '国内股票', weight: 1.0, return20y: 550, maxDrawdown: -82.1, type: '✅实际回测' },
-            { id: 9, code: '159222', name: '易方达国证自由现金流ETF', assetClass: '国内股票', weight: 8.0, return20y: 2929, maxDrawdown: -42.3, type: '⚠️理论推算' },
-            { id: 10, code: '159207', name: '广发中证智选高股息策略ETF', assetClass: '国内股票', weight: 4.0, return20y: 734, maxDrawdown: -47.2, type: '⚠️理论推算' },
-            { id: 11, code: '563020', name: '易方达中证红利低波动ETF', assetClass: '国内股票', weight: 3.5, return20y: 542, maxDrawdown: -43.6, type: '⚠️理论推算' },
-            { id: 12, code: '159307', name: '博时中证红利低波动100ETF', assetClass: '国内股票', weight: 3.5, return20y: 542, maxDrawdown: -43.6, type: '⚠️理论推算' },
-            { id: 13, code: '515180', name: '易方达中证红利ETF', assetClass: '国内股票', weight: 13.0, return20y: 1080, maxDrawdown: -60.3, type: '✅实际回测' },
-            { id: 14, code: '159545', name: '易方达恒生港股通高股息低波动ETF', assetClass: '海外股票', weight: 4.5, return20y: 411, maxDrawdown: -41.6, type: '⚠️理论推算' },
-            { id: 15, code: '513920', name: '华安恒生港股通央企红利ETF', assetClass: '海外股票', weight: 2.5, return20y: 431, maxDrawdown: -36.2, type: '⚠️理论推算' },
-            { id: 16, code: '159569', name: '景顺长城国证港股通红利低波ETF', assetClass: '海外股票', weight: 2.5, return20y: 359, maxDrawdown: -32.7, type: '⚠️理论推算' },
-            { id: 17, code: '520810', name: '易方达中证港股通高股息ETF', assetClass: '海外股票', weight: 4.5, return20y: 492, maxDrawdown: -48.1, type: '⚠️理论推算' },
-            { id: 18, code: '511360', name: '海富通中证短融ETF', assetClass: '债券', weight: 8.0, return20y: 90, maxDrawdown: -2.1, type: '✅实际回测' },
-            { id: 19, code: '511180', name: '海富通上证投资级可转债ETF', assetClass: '债券', weight: 5.0, return20y: 273, maxDrawdown: -32.4, type: '⚠️理论推算' },
-            { id: 20, code: '511520', name: '富国中债7-10年政策性金融债ETF', assetClass: '债券', weight: 10.0, return20y: 130, maxDrawdown: -12.8, type: '✅实际回测' }
+            { id: 1, code: '510500', name: '中证500ETF南方', establish: '2013-02-06', assetClass: '国内股票', weight: 5.0, return20y: 610, maxDrawdown: -73.5, volatility: 25.1, sharpe: 0.29, type: '⚠️理论推算' },
+            { id: 2, code: '159593', name: '中证A50ETF平安', establish: '2024-03-04', assetClass: '国内股票', weight: 3.0, return20y: 233, maxDrawdown: -45.8, volatility: 18.2, sharpe: 0.18, type: '⚠️理论推算' },
+            { id: 3, code: '513300', name: '纳斯达克ETF华夏', establish: '2020-10-22', assetClass: '海外股票', weight: 12.0, return20y: 1392, maxDrawdown: -55.7, volatility: 22.3, sharpe: 0.50, type: '⚠️理论推算' },
+            { id: 4, code: '520870', name: '巴西ETF易方达', establish: '2025-11-05', assetClass: '海外股票', weight: 2.0, return20y: 350, maxDrawdown: -69.2, volatility: 28.7, sharpe: 0.17, type: '⚠️理论推算' },
+            { id: 5, code: '159687', name: '亚太精选ETF南方', establish: '2022-12-16', assetClass: '海外股票', weight: 2.0, return20y: 301, maxDrawdown: -48.9, volatility: 19.5, sharpe: 0.22, type: '⚠️理论推算' },
+            { id: 6, code: '159985', name: '豆粕ETF华夏', establish: '2019-09-24', assetClass: '商品', weight: 2.0, return20y: 146, maxDrawdown: -40.2, volatility: 16.8, sharpe: 0.09, type: '⚠️理论推算' },
+            { id: 7, code: '518880', name: '黄金ETF华安', establish: '2013-07-18', assetClass: '黄金', weight: 4.0, return20y: 380, maxDrawdown: -45.6, volatility: 14.2, sharpe: 0.36, type: '⚠️理论推算' },
+            { id: 8, code: '512400', name: '有色金属ETF南方', establish: '2017-08-03', assetClass: '国内股票', weight: 1.0, return20y: 550, maxDrawdown: -82.1, volatility: 32.5, sharpe: 0.17, type: '⚠️理论推算' },
+            { id: 9, code: '159222', name: '自由现金流ETF易方达', establish: '2025-04-09', assetClass: '国内股票', weight: 8.0, return20y: 2929, maxDrawdown: -42.3, volatility: 21.8, sharpe: 0.71, type: '⚠️理论推算' },
+            { id: 10, code: '159207', name: '高股息ETF广发', establish: '2025-03-27', assetClass: '国内股票', weight: 4.0, return20y: 734, maxDrawdown: -47.2, volatility: 17.6, sharpe: 0.47, type: '⚠️理论推算' },
+            { id: 11, code: '563020', name: '红利低波ETF易方达', establish: '2023-12-06', assetClass: '国内股票', weight: 3.5, return20y: 542, maxDrawdown: -43.6, volatility: 15.9, sharpe: 0.41, type: '⚠️理论推算' },
+            { id: 12, code: '159307', name: '红利低波100ETF博时', establish: '2024-04-16', assetClass: '国内股票', weight: 3.5, return20y: 542, maxDrawdown: -43.6, volatility: 16.1, sharpe: 0.40, type: '⚠️理论推算' },
+            { id: 13, code: '515180', name: '红利ETF易方达', establish: '2019-11-26', assetClass: '国内股票', weight: 13.0, return20y: 1080, maxDrawdown: -60.3, volatility: 19.2, sharpe: 0.51, type: '⚠️理论推算' },
+            { id: 14, code: '159545', name: '恒生红利低波ETF易方达', establish: '2024-03-27', assetClass: '海外股票', weight: 4.5, return20y: 411, maxDrawdown: -41.6, volatility: 16.8, sharpe: 0.33, type: '⚠️理论推算' },
+            { id: 15, code: '513920', name: '港股通央企红利ETF华安', establish: '2023-12-20', assetClass: '海外股票', weight: 2.5, return20y: 431, maxDrawdown: -36.2, volatility: 15.2, sharpe: 0.38, type: '⚠️理论推算' },
+            { id: 16, code: '159569', name: '港股红利低波ETF景顺', establish: '2024-08-14', assetClass: '海外股票', weight: 2.5, return20y: 359, maxDrawdown: -32.7, volatility: 14.5, sharpe: 0.34, type: '⚠️理论推算' },
+            { id: 17, code: '520810', name: '港股通红利ETF易方达', establish: '2025-12-22', assetClass: '海外股票', weight: 4.5, return20y: 492, maxDrawdown: -48.1, volatility: 17.9, sharpe: 0.30, type: '⚠️理论推算' },
+            { id: 18, code: '511360', name: '短融ETF海富通', establish: '2020-08-03', assetClass: '债券', weight: 8.0, return20y: 90, maxDrawdown: -2.1, volatility: 2.8, sharpe: 0.11, type: '⚠️理论推算' },
+            { id: 19, code: '511180', name: '可转债ETF海富通', establish: '2020-07-13', assetClass: '债券', weight: 5.0, return20y: 156, maxDrawdown: -10.2, volatility: 7.5, sharpe: 0.24, type: '⚠️理论推算' },
+            { id: 20, code: '511520', name: '政金债ETF富国', establish: '2022-08-19', assetClass: '债券', weight: 10.0, return20y: 130, maxDrawdown: -12.8, volatility: 4.2, sharpe: 0.29, type: '⚠️理论推算' }
         ];
+
+        /**
+         * 组合层面：历史「最长」回撤片段（月，按月末净值近似；与回测程序口径须一致）。
+         * drawdownMonths：阶段高点 → 对应谷底
+         * recoveryMonths：谷底 → 净值恢复至该阶段高点
+         */
+        const PORTFOLIO_DRAWDOWN_TIMELINE = {
+            optimal: { drawdownMonths: 11, recoveryMonths: 16 },
+            equalWeight: { drawdownMonths: 27, recoveryMonths: 41 }
+        };
+
+        function applyPortfolioDrawdownTimelineCards() {
+            const fmt = (d, r) => `${d} / ${r} 月`;
+            const o = PORTFOLIO_DRAWDOWN_TIMELINE.optimal;
+            const e = PORTFOLIO_DRAWDOWN_TIMELINE.equalWeight;
+            const elO = document.getElementById('metric-opt-dd-timeline');
+            const elE = document.getElementById('metric-ew-dd-timeline');
+            if (elO) elO.textContent = fmt(o.drawdownMonths, o.recoveryMonths);
+            if (elE) elE.textContent = fmt(e.drawdownMonths, e.recoveryMonths);
+        }
 
         // --- 排序全局状态 ---
         let currentSortKey = 'index';
@@ -606,10 +651,13 @@
                     <td class="mono">${index + 1}</td>
                     <td><strong class="mono">${etf.code}</strong></td>
                     <td>${etf.name}</td>
+                    <td class="mono">${etf.establish}</td>
                     <td>${etf.assetClass}</td>
                     <td class="mono"><strong>${etf.weight}%</strong></td>
                     <td class="pct-up mono">${etf.return20y}%</td>
                     <td class="drawdown-num mono">${etf.maxDrawdown}%</td>
+                    <td class="mono">${etf.volatility}%</td>
+                    <td class="mono">${etf.sharpe.toFixed(2)}</td>
                     <td>${etf.type}</td>
                 `;
                 tableBody.appendChild(row);
@@ -637,12 +685,12 @@
             // 按不同字段类型排序
             renderData = [...originEtfData].sort((a, b) => {
                 // 数字类型字段排序
-                const numberKeys = ['weight', 'return20y', 'maxDrawdown', 'id'];
+                const numberKeys = ['weight', 'return20y', 'maxDrawdown', 'volatility', 'sharpe', 'id'];
                 if (numberKeys.includes(sortKey)) {
                     return currentSortDir === 'asc' ? a[sortKey] - b[sortKey] : b[sortKey] - a[sortKey];
                 }
                 // 字符串类型字段排序（支持中文）
-                const stringKeys = ['code', 'name', 'assetClass', 'type'];
+                const stringKeys = ['code', 'name', 'establish', 'assetClass', 'type'];
                 if (stringKeys.includes(sortKey)) {
                     const compareResult = String(a[sortKey]).localeCompare(String(b[sortKey]), 'zh-CN');
                     return currentSortDir === 'asc' ? compareResult : -compareResult;
@@ -667,6 +715,7 @@
             }
 
             renderTable();
+            applyPortfolioDrawdownTimelineCards();
 
             // 给所有可排序表头绑定点击事件
             document.querySelectorAll('#etfTable th').forEach(th => {
@@ -721,7 +770,7 @@
                     labels: ['原等权组合', '最优稳定配置组合'],
                     datasets: [{
                         label: '20年期末总资产 (元)',
-                        data: [1402000, 1850850],
+                        data: [1373100, 1839150],
                         backgroundColor: [
                             'rgba(59, 138, 138, 0.82)',
                             'rgba(201, 168, 76, 0.88)'
@@ -774,7 +823,7 @@
                     datasets: [
                         {
                             label: '原等权组合',
-                            data: [{ x: 44.8, y: 9.82 }],
+                            data: [{ x: 44.9, y: 9.75 }],
                             backgroundColor: 'rgba(59, 138, 138, 0.95)',
                             borderColor: 'rgba(59, 138, 138, 1)',
                             borderWidth: 1,
@@ -783,7 +832,7 @@
                         },
                         {
                             label: '最优稳定配置组合',
-                            data: [{ x: 21.5, y: 11.3 }],
+                            data: [{ x: 21.1, y: 11.26 }],
                             backgroundColor: 'rgba(201, 168, 76, 0.95)',
                             borderColor: 'rgba(201, 168, 76, 1)',
                             borderWidth: 1,

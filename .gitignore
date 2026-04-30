@@ -1,2 +1,27 @@
+# macOS / Windows
 .DS_Store
+Thumbs.db
+
+# Python（*.py[cod] 仅匹配 .pyc / .pyo 等字节码，不忽略 .py 源文件）
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+env/
+
+# Editors / tooling
+.idea/
+*.swp
+*.swo
+
+# Local outputs（脚本抓取结果等）
+etf_meta.json
 *.csv
+
+# Logs
+*.log
+
+# 勿忽略：`scripts/` 下工具脚本应纳入版本库（若曾为 `scripts/` 或 `*.py` 写过忽略规则，请先删除再依赖下方反选）
+!/scripts/fetch_eastmoney_etf_metadata.py
