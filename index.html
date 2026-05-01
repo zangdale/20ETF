@@ -119,6 +119,17 @@
         }
         .brand-sep { color: var(--text-dim); margin: 0 4px; }
         .brand-sub { color: var(--gold); font-weight: 600; }
+        .brand a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+            text-transform: none;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: color var(--transition-fast), border-color var(--transition-fast);
+        }
+        .brand a:hover { color: var(--gold); border-bottom-color: var(--gold); }
         .topnav-meta {
             margin-left: auto;
             display: flex;
@@ -430,6 +441,8 @@
                 <span>20ETF 回测</span>
                 <span class="brand-sep">·</span>
                 <span class="brand-sub">配置分析报告</span>
+                <span class="brand-sep">·</span>
+                <a href="etf.html">持仓明细</a>
             </div>
             <div class="topnav-meta">
                 <div class="topnav-chip">
@@ -562,13 +575,13 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-table" class="panel-title">四、20只ETF详细回测与配置</h2>
-                <span class="panel-sub">点击表头可按列排序 · 成立日期来源见页首说明</span>
+                <span class="panel-sub">点击表头可按列排序 · <strong>序号</strong>为基金固定编号（排序后不变）· 成立日期来源见页首说明</span>
             </div>
             <div class="table-wrap">
                 <table id="etfTable" class="panel-table">
                     <thead>
                         <tr>
-                            <th data-sort="index">序号</th>
+                            <th data-sort="index" title="报告内固定序号（排序不变）">序号</th>
                             <th data-sort="code">代码</th>
                             <th data-sort="name">基金简称</th>
                             <th data-sort="establish">成立日期</th>
@@ -717,10 +730,10 @@
             tableBody.innerHTML = ''; // 清空原有内容
 
             // 渲染排序后的行
-            renderData.forEach((etf, index) => {
+            renderData.forEach((etf) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="mono">${index + 1}</td>
+                    <td class="mono">${etf.id}</td>
                     <td><strong class="mono">${etf.code}</strong></td>
                     <td>${etf.name}</td>
                     <td class="mono">${etf.establish}</td>

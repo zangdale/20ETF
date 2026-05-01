@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="color-scheme" content="dark">
+    <title>ETF 持仓明细 · etf.json</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 与 index.html 一致的 Peakstone Labs 看盘风格 */
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --border: #1e2d45;
+            --gold: #c9a84c;
+            --gold-dim: rgba(201, 168, 76, 0.15);
+            --teal: #3b8a8a;
+            --good: #4caf50;
+            --warn: #ff9800;
+            --bad: #f44336;
+            --market-up: var(--bad);
+            --market-down: var(--good);
+            --text-primary: #e8edf5;
+            --text-secondary: #8896ab;
+            --text-dim: #5a6678;
+            --overlay-nav-bg: rgba(10, 14, 23, 0.85);
+            --overlay-grid: rgba(59, 138, 138, 0.03);
+            --radius-2xl: 12px;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+            --container-max: 1200px;
+            --container-pad: 24px;
+            --nav-height: 56px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --transition-fast: 0.2s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            font-size: 15px;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            padding-top: calc(var(--nav-height) + var(--safe-top));
+            padding-bottom: max(16px, var(--safe-bottom));
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(var(--overlay-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--overlay-grid) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+        }
+
+        .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+        .topnav {
+            position: fixed;
+            inset: 0 0 auto 0;
+            min-height: var(--nav-height);
+            height: auto;
+            padding-top: var(--safe-top);
+            padding-left: var(--safe-left);
+            padding-right: var(--safe-right);
+            background: var(--overlay-nav-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        .topnav-inner {
+            max-width: var(--container-max);
+            min-height: var(--nav-height);
+            margin: 0 auto;
+            padding: 10px var(--container-pad);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 8px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            color: var(--text-primary);
+        }
+        .brand-sep { color: var(--text-dim); margin: 0 4px; }
+        .brand-sub { color: var(--gold); font-weight: 600; }
+        .brand a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.72rem;
+            letter-spacing: 0.04em;
+            text-transform: none;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: color var(--transition-fast), border-color var(--transition-fast);
+        }
+        .brand a:hover { color: var(--gold); border-bottom-color: var(--gold); }
+        .topnav-meta {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .topnav-chip {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
+            white-space: nowrap;
+        }
+        .topnav-chip span.label {
+            display: block;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        .topnav-chip span.val {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding: 28px var(--container-pad) 72px;
+            padding-bottom: max(72px, calc(var(--safe-bottom) + 48px));
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-hero {
+            text-align: center;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .page-hero h1 {
+            font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        .page-hero .hero-sub {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .panel { margin-bottom: 32px; }
+        .panel-head {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            margin-bottom: 16px;
+        }
+        .panel-head .accent-line {
+            width: 48px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            align-self: center;
+        }
+        .panel-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .panel-sub {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+        }
+
+        .disclaimer {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 152, 0, 0.35);
+            border-radius: var(--radius-2xl);
+            padding: 16px 20px;
+            margin: 20px 0 28px;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+        .disclaimer strong { color: var(--warn); font-weight: 600; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        .stat-card:hover {
+            border-color: rgba(201, 168, 76, 0.35);
+        }
+        .stat-card--accent {
+            border-color: rgba(201, 168, 76, 0.45);
+            box-shadow: inset 0 0 0 1px var(--gold-dim);
+        }
+        .stat-card h3 {
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin: 0;
+        }
+        .stat-card .value {
+            font-size: 1.65rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+            line-height: 1.25;
+        }
+        .stat-card.stat-card--accent .value { color: var(--gold); }
+        .stat-card .label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+        .stat-card .stat-extreme-detail {
+            font-size: 0.76rem;
+            color: var(--text-dim);
+            margin-top: 6px;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .table-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            margin-top: 8px;
+        }
+        .panel-table {
+            width: 100%;
+            min-width: 1140px;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .panel-table thead th {
+            background: var(--bg-secondary);
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 22px;
+            transition: color var(--transition-fast), background var(--transition-fast);
+            vertical-align: bottom;
+        }
+        .panel-table thead th:hover {
+            color: var(--gold);
+            background: rgba(26, 34, 52, 0.98);
+        }
+        .panel-table thead th.sort-asc::after,
+        .panel-table thead th.sort-desc::after {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            color: var(--gold);
+        }
+        .panel-table thead th.sort-asc::after { content: "↑"; }
+        .panel-table thead th.sort-desc::after { content: "↓"; }
+        .panel-table tbody td {
+            padding: 11px 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+        .panel-table tbody tr:last-child td { border-bottom: none; }
+        .panel-table tbody tr:hover { background: rgba(59, 138, 138, 0.06); }
+        .panel-table td strong { font-weight: 600; color: var(--text-primary); }
+
+        .pct-up { color: var(--market-up); font-weight: 600; }
+        .pct-down-num { color: var(--market-down); font-weight: 600; }
+
+        .state-msg {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .state-msg.error { color: var(--bad); }
+
+        .btn-classify {
+            appearance: none;
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+        }
+        .btn-classify:focus-visible {
+            outline: 2px solid rgba(201, 168, 76, 0.5);
+            outline-offset: 2px;
+        }
+        .btn-classify:hover {
+            border-color: rgba(201, 168, 76, 0.45);
+            color: var(--gold);
+        }
+        .btn-classify--primary {
+            background: rgba(201, 168, 76, 0.12);
+            border-color: rgba(201, 168, 76, 0.5);
+            color: var(--gold);
+        }
+        .btn-classify--primary:hover {
+            background: rgba(201, 168, 76, 0.2);
+        }
+        .btn-classify--danger {
+            border-color: rgba(244, 67, 54, 0.45);
+            color: var(--bad);
+        }
+        .btn-classify--danger:hover {
+            background: rgba(244, 67, 54, 0.08);
+        }
+        .btn-classify--small {
+            font-size: 0.72rem;
+            padding: 5px 10px;
+            font-weight: 600;
+        }
+        .group-add-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 12px;
+            margin-bottom: 10px;
+            padding: 12px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+        }
+        .group-add-box .group-name-edit {
+            flex: 1 1 0;
+            min-width: 0;
+            width: auto;
+            max-width: none;
+        }
+        .group-add-box .btn-classify {
+            flex: 0 0 auto;
+        }
+        #groupSummaryTable .manage-action-th,
+        #groupSummaryTable tbody td.manage-action-cell {
+            width: 96px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .group-name-edit {
+            width: min(480px, 100%);
+            max-width: 100%;
+            font-family: var(--font-sans);
+            font-size: 0.86rem;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+            box-sizing: border-box;
+        }
+        .group-name-edit:focus {
+            outline: none;
+            border-color: rgba(201, 168, 76, 0.5);
+            box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.12);
+        }
+
+        #groupSummaryTable.panel-table thead th:not([data-sort]) {
+            cursor: default;
+        }
+        #groupSummaryTable.panel-table thead th:not([data-sort]):hover {
+            color: var(--text-dim);
+            background: var(--bg-secondary);
+        }
+        #groupSummaryTable.panel-table thead th[data-sort] {
+            cursor: pointer;
+            user-select: none;
+        }
+        #groupSummaryTable.panel-table thead th[data-sort]:hover {
+            color: var(--gold);
+            background: rgba(26, 34, 52, 0.98);
+        }
+
+        .group-summary-placeholder-msg {
+            padding-top: 20px !important;
+            padding-bottom: 14px !important;
+        }
+
+        #etfHoldingsTable th.group-sort-th {
+            cursor: pointer;
+            min-width: 128px;
+            max-width: 220px;
+        }
+        #etfHoldingsTable th.group-sort-th:hover {
+            color: var(--gold);
+            background: rgba(26, 34, 52, 0.98);
+        }
+        #etfHoldingsTable td.group-cell-td {
+            vertical-align: middle;
+            padding: 8px 10px;
+        }
+        #etfHoldingsTable .group-pick {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            font-family: var(--font-sans);
+            font-size: 0.76rem;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 8px;
+            cursor: pointer;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        #etfHoldingsTable .group-pick:focus-visible {
+            outline: 2px solid rgba(201, 168, 76, 0.45);
+            outline-offset: 1px;
+        }
+        #etfHoldingsTable .group-pick:hover {
+            border-color: rgba(201, 168, 76, 0.45);
+        }
+
+        .upload-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+            padding: 24px 22px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            transition: border-color var(--transition-fast);
+        }
+        .upload-card:focus-within {
+            border-color: rgba(201, 168, 76, 0.4);
+        }
+        .upload-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .upload-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 120px;
+            padding: 20px;
+            border: 1px dashed rgba(136, 150, 171, 0.45);
+            border-radius: 10px;
+            background: rgba(17, 24, 39, 0.55);
+            cursor: pointer;
+            transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+            text-align: center;
+        }
+        .upload-zone:hover {
+            border-color: rgba(201, 168, 76, 0.55);
+            background: rgba(26, 34, 52, 0.65);
+        }
+        .upload-zone.dragover {
+            border-color: var(--gold);
+            border-style: solid;
+            box-shadow: inset 0 0 0 1px var(--gold-dim);
+        }
+        .upload-zone .upload-title {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.06em;
+        }
+        .upload-zone .upload-cta {
+            font-size: 0.8rem;
+            color: var(--gold);
+            font-weight: 600;
+        }
+        .upload-hint {
+            margin-top: 14px;
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            text-align: center;
+        }
+        .file-meta {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+        .file-meta strong { color: var(--gold); font-weight: 600; }
+
+        .upload-actions {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .sample-download-btn {
+            appearance: none;
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--gold);
+            background: var(--bg-secondary);
+            border: 1px solid rgba(201, 168, 76, 0.45);
+            border-radius: 8px;
+            padding: 10px 18px;
+            cursor: pointer;
+            transition: background var(--transition-fast), border-color var(--transition-fast);
+        }
+        .sample-download-btn:hover {
+            background: rgba(26, 34, 52, 0.95);
+            border-color: var(--gold);
+        }
+        .sample-download-btn:focus-visible {
+            outline: 2px solid rgba(201, 168, 76, 0.6);
+            outline-offset: 2px;
+        }
+        .sample-download-btn .fname {
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+        .upload-actions-hint {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            text-align: center;
+            max-width: 440px;
+            line-height: 1.45;
+        }
+
+        @media (min-width: 641px) {
+            .topnav-inner {
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+            .topnav-meta {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                max-width: min(560px, 45vw);
+            }
+            .topnav-meta::-webkit-scrollbar { display: none; }
+            .brand { flex-shrink: 0; }
+        }
+
+        @media (max-width: 900px) {
+            .topnav-meta { margin-left: 0; width: 100%; }
+            .topnav-chip { flex: 1 1 calc(50% - 8px); min-width: 0; }
+        }
+
+        @media (max-width: 640px) {
+            html { font-size: 14px; }
+            :root { --container-pad: 14px; }
+            .topnav {
+                position: sticky;
+                top: 0;
+                padding-top: var(--safe-top);
+            }
+            body { padding-top: var(--safe-top); }
+            .topnav-inner { gap: 12px 16px; padding: 12px var(--container-pad); align-items: flex-start; }
+            .brand { font-size: 0.72rem; letter-spacing: 0.06em; }
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .value { font-size: 1.35rem; }
+            .panel-table { font-size: 0.78rem; min-width: 1040px; }
+            .panel-table thead th,
+            .panel-table tbody td {
+                padding: 12px 8px;
+            }
+            .panel-table thead th {
+                padding-right: 28px;
+                min-height: 44px;
+            }
+            #etfHoldingsTable th.group-sort-th {
+                min-height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="topnav" aria-label="页面导航">
+        <div class="topnav-inner">
+            <div class="brand">
+                <span>ETF 持仓</span>
+                <span class="brand-sep">·</span>
+                <span class="brand-sub">明细</span>
+                <span class="brand-sep">·</span>
+                <a href="index.html">回测报告</a>
+            </div>
+            <div class="topnav-meta">
+                <div class="topnav-chip">
+                    <span class="label">标的数量</span>
+                    <span class="val" id="chip-count">—</span>
+                </div>
+                <div class="topnav-chip">
+                    <span class="label">合计市值</span>
+                    <span class="val" id="chip-sum">—</span>
+                </div>
+                <div class="topnav-chip" id="chip-file-wrap" hidden>
+                    <span class="label">数据源</span>
+                    <span class="val" id="chip-file">—</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="page-hero">
+            <h1>持仓清单 · etf.json</h1>
+            <p class="hero-sub">在本页<strong>上传</strong>导出的 <code style="font-family:var(--font-mono);font-size:0.85em;">etf.json</code>（可选拖放）；解析在浏览器本地完成，不上传服务器。表头可排序；盈亏按成本与现价粗略估算。</p>
+        </header>
+
+        <div class="disclaimer" role="note">
+            <strong>说明：</strong>数据来源于你选择的本地文件，仅供个人核对持仓与权重；不构成任何投资建议。
+        </div>
+
+        <section class="panel" aria-labelledby="sec-upload">
+            <div class="panel-head">
+                <span class="accent-line" aria-hidden="true"></span>
+                <h2 id="sec-upload" class="panel-title">载入数据</h2>
+                <span class="panel-sub">选择或拖放 JSON 文件</span>
+            </div>
+            <div class="upload-card">
+                <input type="file" id="etf-file" class="upload-input" accept=".json,application/json" />
+                <label for="etf-file" class="upload-zone" id="upload-zone">
+                    <span class="upload-title">ETF 持仓 JSON</span>
+                    <span class="upload-cta">点击选择文件</span>
+                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组，字段与导出一致：名称、编号、市值、仓位、持仓、可用持仓、成本、现价</span>
+                </label>
+                <p class="upload-hint">也可将 <span class="mono">etf.json</span> 拖入上方区域</p>
+                <div class="upload-actions">
+                    <button type="button" class="sample-download-btn" id="btn-download-sample" aria-label="下载案例 JSON 文件 etf-sample.json">
+                        下载案例 <span class="fname">etf-sample.json</span>
+                    </button>
+                    <span class="upload-actions-hint">少量示例行，格式与真实导出一致；下载后可再上传本页试看，或按此结构替换为你的数据。您可以使用AI将持仓截图转换为JSON格式。</span>
+                </div>
+                <p class="file-meta" id="file-meta" hidden>当前文件：<strong id="file-name"></strong></p>
+            </div>
+            <div id="parse-error" class="state-msg error" style="padding-top:8px;" hidden></div>
+        </section>
+
+        <section class="panel" aria-labelledby="sec-summary">
+            <div class="panel-head">
+                <span class="accent-line" aria-hidden="true"></span>
+                <h2 id="sec-summary" class="panel-title">汇总</h2>
+                <span class="panel-sub">条目数、市值合计；合计盈亏按「市值 − 成本×持仓」（仅成本基数 &gt; 0）；盈亏家数与明细「盈亏%」列一致；极值卡片取单条浮盈/浮亏最大者（仅统计该口径下盈或亏的条目）</span>
+            </div>
+            <div class="metrics-grid">
+                <div class="stat-card stat-card--accent">
+                    <h3>标的数量</h3>
+                    <div class="value mono" id="stat-count">—</div>
+                    <div class="label">当前文件条数</div>
+                </div>
+                <div class="stat-card">
+                    <h3>合计市值</h3>
+                    <div class="value mono" id="stat-sum">—</div>
+                    <div class="label">各条目市值相加</div>
+                </div>
+                <div class="stat-card stat-card--accent">
+                    <h3>盈利金额</h3>
+                    <div class="value mono" id="stat-profit-cny">—</div>
+                    <div class="label">合计浮动盈亏（元）</div>
+                </div>
+                <div class="stat-card">
+                    <h3>盈利百分比</h3>
+                    <div class="value mono" id="stat-profit-pct">—</div>
+                    <div class="label">相对成本合计的收益率</div>
+                </div>
+                <div class="stat-card">
+                    <h3>盈利标的数量</h3>
+                    <div class="value mono" id="stat-win-count">—</div>
+                    <div class="label">盈亏% &gt; 0 · 成本 ≠ 0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>亏损标的数量</h3>
+                    <div class="value mono" id="stat-loss-count">—</div>
+                    <div class="label">盈亏% &lt; 0 · 成本 ≠ 0</div>
+                </div>
+                <div class="stat-card stat-card--accent">
+                    <h3>盈利最多的标的</h3>
+                    <div class="value mono" id="stat-best-pnl-val">—</div>
+                    <div class="label">单条最大浮盈（元）</div>
+                    <div class="stat-extreme-detail mono" id="stat-best-pnl-detail" hidden></div>
+                </div>
+                <div class="stat-card">
+                    <h3>亏损最多的标的</h3>
+                    <div class="value mono" id="stat-worst-pnl-val">—</div>
+                    <div class="label">单条最大浮亏（元）</div>
+                    <div class="stat-extreme-detail mono" id="stat-worst-pnl-detail" hidden></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="sec-table">
+            <div class="panel-head">
+                <span class="accent-line" aria-hidden="true"></span>
+                <h2 id="sec-table" class="panel-title">明细表</h2>
+                <span class="panel-sub">点击表头排序；序号列为<strong>导入文件中的行序</strong>（排序后不变）</span>
+            </div>
+            <p id="table-placeholder" class="state-msg">上传 JSON 后将在此显示明细表。</p>
+            <div class="table-wrap" id="table-wrap" hidden>
+                <table id="etfHoldingsTable" class="panel-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="index" title="JSON 中行顺序（1 起），与排序无关">序号</th>
+                            <th data-sort="name">名称</th>
+                            <th data-sort="code">编号</th>
+                            <th data-sort="mktcap">市值</th>
+                            <th data-sort="weight">仓位</th>
+                            <th data-sort="shares">持仓</th>
+                            <th data-sort="avail">可用持仓</th>
+                            <th data-sort="cost">成本</th>
+                            <th data-sort="price">现价</th>
+                            <th data-sort="pnlPct">盈亏%</th>
+                            <th class="group-sort-th mono" scope="col" data-sort="group">分组</th>
+                        </tr>
+                    </thead>
+                    <tbody id="etfHoldingsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel" id="classify-panel" aria-labelledby="sec-classify" hidden>
+            <div class="panel-head">
+                <span class="accent-line" aria-hidden="true"></span>
+                <h2 id="sec-classify" class="panel-title">分组明细表</h2>
+                <span class="panel-sub">在<strong>明细表「分组」列</strong>为每条持仓指定分组；以下为各分组标的数与 Σ 持仓成本（元）、市值、仓位及浮盈；含「（未分组）」行（默认在行末）；<strong>点击表头</strong>可排序；配置保存在浏览器本地。</span>
+            </div>
+            <div class="group-add-box">
+                <input
+                    type="text"
+                    id="group-new-name"
+                    class="group-name-edit"
+                    placeholder="输入分组名称"
+                    maxlength="64"
+                    autocomplete="off"
+                    aria-label="新分组名称"
+                />
+                <button type="button" class="btn-classify btn-classify--primary" id="btn-group-add">添加</button>
+            </div>
+            <p id="group-summary-placeholder" class="state-msg group-summary-placeholder-msg" hidden>暂无持仓数据。</p>
+            <div class="table-wrap" id="group-summary-wrap">
+                <table class="panel-table panel-table--static-head" id="groupSummaryTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="label" scope="col">分组</th>
+                            <th class="mono" data-sort="count">标的数</th>
+                            <th class="mono" data-sort="basis">持仓成本Σ（元）</th>
+                            <th class="mono" data-sort="mktcap">市值Σ（元）</th>
+                            <th class="mono" data-sort="weight">仓位Σ</th>
+                            <th class="mono" data-sort="profit">浮盈Σ（元）</th>
+                            <th class="mono" data-sort="pnlPct">浮盈%</th>
+                            <th class="manage-action-th">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groupSummaryBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+/** 案例数据：字段与真实导出一致，便于试页面或作为模板 */
+        const SAMPLE_ETF_ROWS = [
+            {"名称":"工业有色","市值":1380.80,"编号":"560860","仓位":"0.5%","持仓":800,"可用持仓":800,"成本":0.206,"现价":1.726},
+            {"名称":"黄金股PA","市值":344.40,"编号":"159322","仓位":"0.1%","持仓":200,"可用持仓":200,"成本":0.217,"现价":1.722},
+            {"名称":"豆粕ETF","市值":864.80,"编号":"159985","仓位":"0.3%","持仓":400,"可用持仓":400,"成本":1.525,"现价":2.162},
+            {"名称":"纳斯达克","市值":6442.20,"编号":"513300","仓位":"2.5%","持仓":2700,"可用持仓":2700,"成本":2.335,"现价":2.386},
+            {"名称":"黄金ETF","市值":43551.00,"编号":"518880","仓位":"16.6%","持仓":4500,"可用持仓":4500,"成本":9.770,"现价":9.678}
+        ];
+
+        function downloadSampleEtfJson() {
+            const text = JSON.stringify(SAMPLE_ETF_ROWS, null, 2);
+            const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'etf-sample.json';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function parsePercent(str) {
+            if (typeof str !== 'string') return NaN;
+            const n = parseFloat(String(str).replace('%', '').trim());
+            return Number.isFinite(n) ? n : NaN;
+        }
+
+        /** @param {any} raw */
+        function normalizeRow(raw, idx) {
+            const name = raw['名称'] ?? '';
+            const code = String(raw['编号'] ?? '');
+            const mktcap = Number(raw['市值']);
+            const weightStr = raw['仓位'] ?? '0%';
+            const shares = Number(raw['持仓']);
+            const avail = Number(raw['可用持仓']);
+            const cost = Number(raw['成本']);
+            const price = Number(raw['现价']);
+            const weightNum = parsePercent(weightStr);
+            let pnlPct = NaN;
+            if (Number.isFinite(cost) && cost !== 0 && Number.isFinite(price)) {
+                pnlPct = ((price - cost) / cost) * 100;
+            }
+            return {
+                _idx: idx,
+                name,
+                code,
+                mktcap: Number.isFinite(mktcap) ? mktcap : NaN,
+                weightStr,
+                weightNum: Number.isFinite(weightNum) ? weightNum : 0,
+                shares: Number.isFinite(shares) ? shares : NaN,
+                avail: Number.isFinite(avail) ? avail : NaN,
+                cost: Number.isFinite(cost) ? cost : NaN,
+                price: Number.isFinite(price) ? price : NaN,
+                pnlPct
+            };
+        }
+
+        function fmtMoney(n) {
+            if (!Number.isFinite(n)) return '—';
+            return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function fmtPrice(n) {
+            if (!Number.isFinite(n)) return '—';
+            return n.toLocaleString('zh-CN', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+        }
+
+        function fmtPnl(n) {
+            if (!Number.isFinite(n)) return '—';
+            const s = (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+            return s;
+        }
+
+        let originRows = [];
+        let renderRows = [];
+        let currentSortKey = 'index';
+        let currentSortDir = 'asc';
+
+        /** 分组明细表排序：null = 分组定义顺序（未分组最后） */
+        let groupSummarySortKey = null;
+        let groupSummarySortDir = 'asc';
+
+        const CLASSIFY_LS_KEY = 'etf20:etf-classify-groups:v1';
+        /** @type {{ id: string, name: string }[]} */
+        let classifyGroups = [];
+        /** 行序号 _idx（字符串）→ 分组 id */
+        let rowAssignments = {};
+        /** 待从 v1（含 codes 数组）迁移 */
+        let pendingV1Migrate = null;
+
+        function newGroupId() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+            return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+        }
+
+        function loadClassifyFromStorage() {
+            pendingV1Migrate = null;
+            classifyGroups = [];
+            rowAssignments = {};
+            try {
+                const raw = localStorage.getItem(CLASSIFY_LS_KEY);
+                if (!raw) return;
+                const o = JSON.parse(raw);
+                if (o && o.v === 2 && Array.isArray(o.groups)) {
+                    classifyGroups = o.groups.map((g) => ({
+                        id: String(g.id || newGroupId()),
+                        name: String(g.name || '分组').trim() || '分组'
+                    }));
+                    rowAssignments = {};
+                    const ra = o.rowAssignments;
+                    if (ra && typeof ra === 'object' && !Array.isArray(ra)) {
+                        Object.entries(ra).forEach(([k, v]) => {
+                            if (v != null && String(v).trim()) rowAssignments[String(k)] = String(v).trim();
+                        });
+                    }
+                    return;
+                }
+                if (Array.isArray(o.groups) && o.groups.length) {
+                    const first = o.groups[0];
+                    if (first && Array.isArray(first.codes)) {
+                        pendingV1Migrate = o.groups;
+                    } else {
+                        classifyGroups = o.groups.map((g) => ({
+                            id: String(g.id || newGroupId()),
+                            name: String(g.name || '分组').trim() || '分组'
+                        }));
+                    }
+                }
+            } catch {
+                /* ignore */
+            }
+        }
+
+        function writeClassifyStored() {
+            try {
+                localStorage.setItem(
+                    CLASSIFY_LS_KEY,
+                    JSON.stringify({
+                        v: 2,
+                        groups: classifyGroups.map((g) => ({ id: g.id, name: g.name })),
+                        rowAssignments: { ...rowAssignments }
+                    })
+                );
+            } catch {
+                /* ignore */
+            }
+        }
+
+        function pruneRowAssignmentsToLength(n) {
+            const next = {};
+            for (const [k, v] of Object.entries(rowAssignments)) {
+                const i = parseInt(k, 10);
+                if (!Number.isInteger(i) || i < 0 || i >= n) continue;
+                next[k] = v;
+            }
+            rowAssignments = next;
+        }
+
+        function validateRowAssignments() {
+            const valid = new Set(classifyGroups.map((g) => g.id));
+            for (const k of Object.keys(rowAssignments)) {
+                const gid = rowAssignments[k];
+                if (!gid || !valid.has(gid)) delete rowAssignments[k];
+            }
+        }
+
+        /** 从旧版（分组内 codes 列表）迁移到「行 → 分组」 */
+        function applyPendingV1Migration() {
+            if (!pendingV1Migrate || !pendingV1Migrate.length || !originRows.length) return;
+            const nextGroups = [];
+            classifyGroups = [];
+            rowAssignments = {};
+            pendingV1Migrate.forEach((og) => {
+                const id = String(og.id || newGroupId()).trim() || newGroupId();
+                const name = String(og.name || '分组').trim() || '分组';
+                nextGroups.push({ id, name });
+                const codes = Array.isArray(og.codes) ? og.codes.map((c) => String(c).trim()) : [];
+                originRows.forEach((r, i) => {
+                    if (!codes.includes(String(r.code))) return;
+                    if (rowAssignments[String(i)]) return;
+                    rowAssignments[String(i)] = id;
+                });
+            });
+            classifyGroups = nextGroups;
+            pendingV1Migrate = null;
+            validateRowAssignments();
+            pruneRowAssignmentsToLength(originRows.length);
+            writeClassifyStored();
+        }
+
+        function rowMarketValue(r) {
+            if (Number.isFinite(r.mktcap)) return r.mktcap;
+            if (Number.isFinite(r.price) && Number.isFinite(r.shares)) return r.price * r.shares;
+            return NaN;
+        }
+
+        function rowCostBasis(r) {
+            if (!Number.isFinite(r.cost) || !Number.isFinite(r.shares)) return NaN;
+            return r.cost * r.shares;
+        }
+
+        function aggregateMemberRows(rows) {
+            let sumMktcap = 0;
+            let sumWeight = 0;
+            let sumShares = 0;
+            let sumAvail = 0;
+            let profitSum = 0;
+            let basisSum = 0;
+            for (const r of rows) {
+                if (Number.isFinite(r.mktcap)) sumMktcap += r.mktcap;
+                if (Number.isFinite(r.weightNum)) sumWeight += r.weightNum;
+                if (Number.isFinite(r.shares)) sumShares += r.shares;
+                if (Number.isFinite(r.avail)) sumAvail += r.avail;
+                const mv = rowMarketValue(r);
+                const basis = rowCostBasis(r);
+                if (Number.isFinite(mv) && Number.isFinite(basis) && basis > 0) {
+                    profitSum += mv - basis;
+                    basisSum += basis;
+                }
+            }
+            const profitPct = basisSum > 0 ? (profitSum / basisSum) * 100 : NaN;
+            return { sumMktcap, sumWeight, sumShares, sumAvail, profitSum, profitPct, basisSum };
+        }
+
+        function classifyPnlCellClass(v) {
+            if (!Number.isFinite(v)) return 'mono';
+            if (v > 0) return 'pct-up mono';
+            if (v < 0) return 'pct-down-num mono';
+            return 'mono';
+        }
+
+        function fmtSignedProfitCny(n) {
+            if (!Number.isFinite(n)) return '—';
+            return (n >= 0 ? '+¥ ' : '−¥ ') + fmtMoney(Math.abs(n));
+        }
+
+        function buildGroupPickerHtml(selectedGroupId, rowIdx) {
+            const selId = selectedGroupId && String(selectedGroupId);
+            let opts = `<option value=""${!selId ? ' selected' : ''}>未分组</option>`;
+            for (const g of classifyGroups) {
+                opts += `<option value="${escapeHtmlAttr(g.id)}"${selId === g.id ? ' selected' : ''}>${escapeHtml(
+                    g.name
+                )}</option>`;
+            }
+            return `<select class="group-pick" data-row-idx="${Number(rowIdx)}" aria-label="选择分组">${opts}</select>`;
+        }
+
+        function addGroupFromInlineInput() {
+            const inp = document.getElementById('group-new-name');
+            const raw = inp ? String(inp.value || '').trim() : '';
+            const name = raw || '新建分组';
+            classifyGroups.push({ id: newGroupId(), name });
+            if (inp) inp.value = '';
+            writeClassifyStored();
+            refreshGroupingPanels();
+            if (originRows.length) renderTable();
+        }
+
+        function deleteClassifyGroupById(groupId) {
+            const gid = String(groupId || '');
+            classifyGroups = classifyGroups.filter((g) => g.id !== gid);
+            for (const k of Object.keys(rowAssignments)) {
+                if (rowAssignments[k] === gid) delete rowAssignments[k];
+            }
+            writeClassifyStored();
+            refreshGroupingPanels();
+            if (originRows.length) renderTable();
+        }
+
+        function renderGroupSummaryTable() {
+            const tbody = document.getElementById('groupSummaryBody');
+            const wrap = document.getElementById('group-summary-wrap');
+            const ph = document.getElementById('group-summary-placeholder');
+
+            document.querySelectorAll('#groupSummaryTable thead th[data-sort]').forEach((th) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (
+                    groupSummarySortKey &&
+                    typeof th.dataset.sort === 'string' &&
+                    th.dataset.sort === groupSummarySortKey
+                ) {
+                    th.classList.add(`sort-${groupSummarySortDir}`);
+                }
+            });
+
+            if (!tbody || !wrap || !ph) return;
+            if (!originRows.length) {
+                wrap.hidden = true;
+                ph.hidden = false;
+                ph.textContent = '暂无持仓数据。';
+                return;
+            }
+            wrap.hidden = false;
+            ph.hidden = true;
+            tbody.innerHTML = '';
+
+            const un = [];
+            originRows.forEach((r, i) => {
+                if (!rowAssignments[String(i)]) un.push(r);
+            });
+
+            const entries = [];
+            let orderIdx = 0;
+            classifyGroups.forEach((g) => {
+                const rr = [];
+                originRows.forEach((r, i) => {
+                    if ((rowAssignments[String(i)] || '') === g.id) rr.push(r);
+                });
+                const agg = aggregateMemberRows(rr);
+                entries.push({
+                    label: g.name,
+                    groupId: g.id,
+                    rows: rr,
+                    agg,
+                    n: rr.length,
+                    orderIdx: orderIdx++
+                });
+            });
+            {
+                const agg = aggregateMemberRows(un);
+                entries.push({
+                    label: '（未分组）',
+                    groupId: null,
+                    rows: un,
+                    agg,
+                    n: un.length,
+                    orderIdx: orderIdx++
+                });
+            }
+
+            const sk = groupSummarySortKey;
+            if (sk) {
+                const dirAsc = groupSummarySortDir === 'asc';
+                entries.sort((a, b) => compareGroupSummaryEntries(a, b, sk, dirAsc));
+            }
+
+            entries.forEach((b) => {
+                const tr = document.createElement('tr');
+                const agg = b.agg;
+                const n = b.n;
+                const basisStr =
+                    n && Number.isFinite(agg.basisSum) && agg.basisSum > 0 ? fmtMoney(agg.basisSum) : '—';
+                const wStr =
+                    n && Number.isFinite(agg.sumWeight)
+                        ? agg.sumWeight.toLocaleString('zh-CN', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                          }) + '%'
+                        : '—';
+                const fpYuan =
+                    n && Number.isFinite(agg.profitSum) ? fmtSignedProfitCny(agg.profitSum) : '—';
+                const fpCls = classifyPnlCellClass(Number.isFinite(agg.profitSum) ? agg.profitSum : NaN);
+                const pctTxt = n ? fmtPnl(agg.profitPct) : '—';
+                const pctCls = classifyPnlCellClass(agg.profitPct);
+
+                const tdName = document.createElement('td');
+                if (b.groupId == null) {
+                    tdName.textContent = b.label;
+                } else {
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.className = 'group-name-edit';
+                    inp.maxLength = 64;
+                    inp.value = b.label;
+                    inp.dataset.groupId = b.groupId;
+                    inp.setAttribute('aria-label', '分组名称');
+                    tdName.appendChild(inp);
+                }
+
+                const tdN = document.createElement('td');
+                tdN.className = 'mono';
+                tdN.textContent = String(n);
+
+                const tdBasis = document.createElement('td');
+                tdBasis.className = 'mono';
+                tdBasis.textContent = basisStr;
+
+                const tdMkt = document.createElement('td');
+                tdMkt.className = 'mono';
+                tdMkt.textContent = n ? fmtMoney(agg.sumMktcap) : '—';
+
+                const tdW = document.createElement('td');
+                tdW.className = 'mono';
+                tdW.textContent = wStr;
+
+                const tdFp = document.createElement('td');
+                tdFp.className = `${fpCls} mono`;
+                tdFp.textContent = fpYuan;
+
+                const tdPct = document.createElement('td');
+                tdPct.className = `${pctCls} mono`;
+                tdPct.textContent = pctTxt;
+
+                const tdOp = document.createElement('td');
+                tdOp.className = 'manage-action-cell';
+                if (b.groupId != null) {
+                    const del = document.createElement('button');
+                    del.type = 'button';
+                    del.className = 'btn-classify btn-classify--danger btn-classify--small';
+                    del.textContent = '删除';
+                    del.dataset.groupDel = b.groupId;
+                    tdOp.appendChild(del);
+                } else {
+                    tdOp.textContent = '—';
+                }
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdN);
+                tr.appendChild(tdBasis);
+                tr.appendChild(tdMkt);
+                tr.appendChild(tdW);
+                tr.appendChild(tdFp);
+                tr.appendChild(tdPct);
+                tr.appendChild(tdOp);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function refreshGroupingPanels() {
+            const panel = document.getElementById('classify-panel');
+            if (!panel) return;
+            if (!originRows.length) {
+                panel.hidden = true;
+                renderGroupSummaryTable();
+                return;
+            }
+            panel.hidden = false;
+            renderGroupSummaryTable();
+        }
+
+        function wireClassifyPanelOnce() {
+            const panel = document.getElementById('classify-panel');
+            if (!panel || panel.dataset.wired === '1') return;
+            panel.dataset.wired = '1';
+            panel.addEventListener('click', (e) => {
+                const b = e.target.closest('button[data-group-del]');
+                if (!b) return;
+                e.preventDefault();
+                deleteClassifyGroupById(b.dataset.groupDel);
+            });
+            panel.addEventListener('change', (e) => {
+                const inp = e.target.closest('input.group-name-edit');
+                if (!inp || !inp.dataset.groupId) return;
+                const g = classifyGroups.find((x) => x.id === inp.dataset.groupId);
+                if (!g) return;
+                const nm = String(inp.value || '').trim() || '未命名分组';
+                if (g.name !== nm) {
+                    g.name = nm;
+                    writeClassifyStored();
+                    if (originRows.length) {
+                        renderTable();
+                        renderGroupSummaryTable();
+                    }
+                }
+            });
+        }
+
+        /** 在有效成本基数下，找最大浮盈与最大浮亏（元）对应行 */
+        function findExtremeFloatingRows(rows) {
+            let bestRow = null;
+            let bestDelta = NaN;
+            let worstRow = null;
+            let worstDelta = NaN;
+            for (const r of rows) {
+                const mv = rowMarketValue(r);
+                const basis = rowCostBasis(r);
+                if (!Number.isFinite(mv) || !Number.isFinite(basis) || basis <= 0) continue;
+                const d = mv - basis;
+                if (d > 0) {
+                    if (!Number.isFinite(bestDelta) || d > bestDelta) {
+                        bestDelta = d;
+                        bestRow = r;
+                    }
+                } else if (d < 0) {
+                    if (!Number.isFinite(worstDelta) || d < worstDelta) {
+                        worstDelta = d;
+                        worstRow = r;
+                    }
+                }
+            }
+            return {
+                best: bestRow && Number.isFinite(bestDelta) ? { row: bestRow, delta: bestDelta } : null,
+                worst: worstRow && Number.isFinite(worstDelta) ? { row: worstRow, delta: worstDelta } : null
+            };
+        }
+
+        function computeTotals(rows) {
+            let sumMktcap = 0;
+            let c = 0;
+            let profitSum = 0;
+            let basisSum = 0;
+            let winCount = 0;
+            let lossCount = 0;
+            for (const r of rows) {
+                c += 1;
+                if (Number.isFinite(r.mktcap)) sumMktcap += r.mktcap;
+                const mv = rowMarketValue(r);
+                const basis = rowCostBasis(r);
+                if (Number.isFinite(mv) && Number.isFinite(basis) && basis > 0) {
+                    profitSum += mv - basis;
+                    basisSum += basis;
+                }
+                if (Number.isFinite(r.pnlPct)) {
+                    if (r.pnlPct > 0) winCount += 1;
+                    else if (r.pnlPct < 0) lossCount += 1;
+                }
+            }
+            const profitPct = basisSum > 0 ? (profitSum / basisSum) * 100 : NaN;
+            return { count: c, sumMktcap, profitSum, profitPct, winCount, lossCount };
+        }
+
+        function updateSummary(rows) {
+            const { count, sumMktcap, profitSum, profitPct, winCount, lossCount } = computeTotals(rows);
+            const countStr = count === 0 ? '—' : String(count);
+            const sumStr = count === 0 ? '—' : '¥ ' + fmtMoney(sumMktcap);
+            const el = (id) => document.getElementById(id);
+            ['chip-count', 'stat-count'].forEach((id) => {
+                const e = el(id);
+                if (e) e.textContent = countStr;
+            });
+            ['chip-sum', 'stat-sum'].forEach((id) => {
+                const e = el(id);
+                if (e) e.textContent = sumStr;
+            });
+
+            const elCny = el('stat-profit-cny');
+            const elPct = el('stat-profit-pct');
+            const setPnlClass = (node, n) => {
+                if (!node) return;
+                node.classList.remove('pct-up', 'pct-down-num');
+                if (!Number.isFinite(n) || count === 0) return;
+                if (n > 0) node.classList.add('pct-up');
+                else if (n < 0) node.classList.add('pct-down-num');
+            };
+
+            const elWin = el('stat-win-count');
+            const elLoss = el('stat-loss-count');
+            const setWinLossClass = (node, kind) => {
+                if (!node) return;
+                node.classList.remove('pct-up', 'pct-down-num');
+                if (count === 0) return;
+                if (kind === 'win') node.classList.add('pct-up');
+                else if (kind === 'loss') node.classList.add('pct-down-num');
+            };
+
+            if (count === 0) {
+                if (elWin) {
+                    elWin.textContent = '—';
+                    elWin.classList.remove('pct-up', 'pct-down-num');
+                }
+                if (elLoss) {
+                    elLoss.textContent = '—';
+                    elLoss.classList.remove('pct-up', 'pct-down-num');
+                }
+            } else {
+                if (elWin) {
+                    elWin.textContent = String(winCount);
+                    setWinLossClass(elWin, 'win');
+                }
+                if (elLoss) {
+                    elLoss.textContent = String(lossCount);
+                    setWinLossClass(elLoss, 'loss');
+                }
+            }
+
+            if (count === 0 || !Number.isFinite(profitSum)) {
+                if (elCny) {
+                    elCny.textContent = '—';
+                    elCny.classList.remove('pct-up', 'pct-down-num');
+                }
+                if (elPct) {
+                    elPct.textContent = '—';
+                    elPct.classList.remove('pct-up', 'pct-down-num');
+                }
+            } else {
+                const cnyStr =
+                    (profitSum >= 0 ? '+¥ ' : '−¥ ') + fmtMoney(Math.abs(profitSum));
+                if (elCny) {
+                    elCny.textContent = cnyStr;
+                    setPnlClass(elCny, profitSum);
+                }
+                if (elPct) {
+                    if (Number.isFinite(profitPct)) {
+                        elPct.textContent = fmtPnl(profitPct);
+                        setPnlClass(elPct, profitPct);
+                    } else {
+                        elPct.textContent = '—';
+                        elPct.classList.remove('pct-up', 'pct-down-num');
+                    }
+                }
+            }
+
+            const { best, worst } = findExtremeFloatingRows(rows);
+            const elBestVal = el('stat-best-pnl-val');
+            const elBestDet = el('stat-best-pnl-detail');
+            const elWorstVal = el('stat-worst-pnl-val');
+            const elWorstDet = el('stat-worst-pnl-detail');
+
+            if (count === 0 || !best) {
+                if (elBestVal) {
+                    elBestVal.textContent = '—';
+                    elBestVal.classList.remove('pct-up', 'pct-down-num');
+                }
+                if (elBestDet) {
+                    elBestDet.textContent = '';
+                    elBestDet.hidden = true;
+                }
+            } else {
+                const r = best.row;
+                const d = best.delta;
+                if (elBestVal) {
+                    elBestVal.textContent = '+¥ ' + fmtMoney(d);
+                    elBestVal.classList.remove('pct-up', 'pct-down-num');
+                    elBestVal.classList.add('pct-up');
+                }
+                if (elBestDet) {
+                    const pctPart = Number.isFinite(r.pnlPct) ? ' · ' + fmtPnl(r.pnlPct) : '';
+                    elBestDet.textContent = r.name + '（' + r.code + '）' + pctPart;
+                    elBestDet.hidden = false;
+                }
+            }
+
+            if (count === 0 || !worst) {
+                if (elWorstVal) {
+                    elWorstVal.textContent = '—';
+                    elWorstVal.classList.remove('pct-up', 'pct-down-num');
+                }
+                if (elWorstDet) {
+                    elWorstDet.textContent = '';
+                    elWorstDet.hidden = true;
+                }
+            } else {
+                const r = worst.row;
+                const d = worst.delta;
+                if (elWorstVal) {
+                    elWorstVal.textContent = '−¥ ' + fmtMoney(Math.abs(d));
+                    elWorstVal.classList.remove('pct-up', 'pct-down-num');
+                    elWorstVal.classList.add('pct-down-num');
+                }
+                if (elWorstDet) {
+                    const pctPart = Number.isFinite(r.pnlPct) ? ' · ' + fmtPnl(r.pnlPct) : '';
+                    elWorstDet.textContent = r.name + '（' + r.code + '）' + pctPart;
+                    elWorstDet.hidden = false;
+                }
+            }
+        }
+
+        function setSourceFile(name) {
+            const wrap = document.getElementById('chip-file-wrap');
+            const chip = document.getElementById('chip-file');
+            const meta = document.getElementById('file-meta');
+            const fname = document.getElementById('file-name');
+            if (name) {
+                if (wrap) wrap.hidden = false;
+                if (chip) chip.textContent = name;
+                if (meta) meta.hidden = false;
+                if (fname) fname.textContent = name;
+            } else {
+                if (wrap) wrap.hidden = true;
+                if (chip) chip.textContent = '—';
+                if (meta) meta.hidden = true;
+                if (fname) fname.textContent = '';
+            }
+        }
+
+        function showParseError(msg) {
+            const el = document.getElementById('parse-error');
+            if (!el) return;
+            if (msg) {
+                el.textContent = msg;
+                el.hidden = false;
+            } else {
+                el.textContent = '';
+                el.hidden = true;
+            }
+        }
+
+        function bindSortHeaders() {
+            document.querySelectorAll('#etfHoldingsTable thead th[data-sort]').forEach((th) => {
+                if (th.dataset.bound === '1') return;
+                th.dataset.bound = '1';
+                th.addEventListener('click', () => sortTable(th.dataset.sort));
+            });
+            document.querySelectorAll('#groupSummaryTable thead th[data-sort]').forEach((th) => {
+                if (th.dataset.bound === '1') return;
+                th.dataset.bound = '1';
+                th.addEventListener('click', () => sortGroupSummaryBy(th.dataset.sort));
+            });
+        }
+
+        function clearDataView() {
+            originRows = [];
+            renderRows = [];
+            currentSortKey = 'index';
+            currentSortDir = 'asc';
+            groupSummarySortKey = null;
+            groupSummarySortDir = 'asc';
+            rowAssignments = {};
+            const body = document.getElementById('etfHoldingsBody');
+            if (body) body.innerHTML = '';
+            updateSummary([]);
+            setSourceFile('');
+            const tableWrap = document.getElementById('table-wrap');
+            const placeholder = document.getElementById('table-placeholder');
+            if (tableWrap) tableWrap.hidden = true;
+            if (placeholder) placeholder.hidden = false;
+            refreshGroupingPanels();
+        }
+
+        /** @param {any[]} data @param {string} [fileName] */
+        function applyPayload(data, fileName) {
+            if (!Array.isArray(data)) throw new Error('JSON 根节点须为对象数组');
+            originRows = data.map((raw, idx) => normalizeRow(raw, idx));
+            renderRows = [...originRows];
+            currentSortKey = 'index';
+            currentSortDir = 'asc';
+            groupSummarySortKey = null;
+            groupSummarySortDir = 'asc';
+
+            applyPendingV1Migration();
+            pruneRowAssignmentsToLength(originRows.length);
+            validateRowAssignments();
+
+            updateSummary(originRows);
+            if (fileName) setSourceFile(fileName);
+            showParseError('');
+
+            const tableWrap = document.getElementById('table-wrap');
+            const placeholder = document.getElementById('table-placeholder');
+            if (tableWrap) tableWrap.hidden = false;
+            if (placeholder) placeholder.hidden = true;
+            renderTable();
+            refreshGroupingPanels();
+            writeClassifyStored();
+        }
+
+        function readFileAsJson(file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const text = String(reader.result ?? '');
+                    const data = JSON.parse(text);
+                    applyPayload(data, file.name);
+                } catch (e) {
+                    clearDataView();
+                    const msg =
+                        e && e instanceof SyntaxError
+                            ? 'JSON 格式无效，请检查文件是否为合法 UTF-8 编码的 JSON。'
+                            : '无法解析：' + (e && e.message ? e.message : String(e));
+                    showParseError(msg);
+                }
+            };
+            reader.onerror = () => {
+                clearDataView();
+                showParseError('读取文件失败，请重试。');
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function renderTable() {
+            const body = document.getElementById('etfHoldingsBody');
+            if (!body) return;
+            body.innerHTML = '';
+
+            renderRows.forEach((r) => {
+                const tr = document.createElement('tr');
+                const pnlClass =
+                    Number.isFinite(r.pnlPct) && r.pnlPct > 0
+                        ? 'pct-up mono'
+                        : Number.isFinite(r.pnlPct) && r.pnlPct < 0
+                          ? 'pct-down-num mono'
+                          : 'mono';
+                const gid = rowAssignments[String(r._idx)] || '';
+                const pickCell = buildGroupPickerHtml(gid, r._idx);
+                tr.innerHTML = `
+                    <td class="mono">${r._idx + 1}</td>
+                    <td>${escapeHtml(r.name)}</td>
+                    <td><strong class="mono">${escapeHtml(r.code)}</strong></td>
+                    <td class="mono">${fmtMoney(r.mktcap)}</td>
+                    <td class="mono"><strong>${escapeHtml(r.weightStr)}</strong></td>
+                    <td class="mono">${Number.isFinite(r.shares) ? String(r.shares) : '—'}</td>
+                    <td class="mono">${Number.isFinite(r.avail) ? String(r.avail) : '—'}</td>
+                    <td class="mono">${fmtPrice(r.cost)}</td>
+                    <td class="mono">${fmtPrice(r.price)}</td>
+                    <td class="${pnlClass}">${fmtPnl(r.pnlPct)}</td>
+                    <td class="group-cell-td">${pickCell}</td>
+                `;
+                body.appendChild(tr);
+            });
+
+            document.querySelectorAll('#etfHoldingsTable thead th').forEach((th) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.sort === currentSortKey) {
+                    th.classList.add(`sort-${currentSortDir}`);
+                }
+            });
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function escapeHtmlAttr(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function sortValue(row, key) {
+            switch (key) {
+                case 'index':
+                    return row._idx;
+                case 'group': {
+                    const gid = rowAssignments[String(row._idx)] || '';
+                    const g = classifyGroups.find((x) => x.id === gid);
+                    return g ? g.name : '';
+                }
+                case 'name':
+                    return row.name;
+                case 'code':
+                    return row.code;
+                case 'mktcap':
+                    return row.mktcap;
+                case 'weight':
+                    return row.weightNum;
+                case 'shares':
+                    return row.shares;
+                case 'avail':
+                    return row.avail;
+                case 'cost':
+                    return row.cost;
+                case 'price':
+                    return row.price;
+                case 'pnlPct':
+                    return row.pnlPct;
+                default:
+                    return row._idx;
+            }
+        }
+
+        function compare(a, b, key, dirAsc) {
+            const va = sortValue(a, key);
+            const vb = sortValue(b, key);
+            const bothNum = typeof va === 'number' && typeof vb === 'number';
+            let cmp = 0;
+            if (bothNum) {
+                const na = Number.isFinite(va) ? va : dirAsc ? Infinity : -Infinity;
+                const nb = Number.isFinite(vb) ? vb : dirAsc ? Infinity : -Infinity;
+                cmp = na === nb ? 0 : na < nb ? -1 : 1;
+            } else {
+                cmp = String(va).localeCompare(String(vb), 'zh-CN');
+            }
+            return dirAsc ? cmp : -cmp;
+        }
+
+        /** @param {{ label: string, n: number, agg: ReturnType<typeof aggregateMemberRows> }} entry */
+        function groupSummarySortValue(entry, sortKey) {
+            switch (sortKey) {
+                case 'label':
+                    return entry.label;
+                case 'count':
+                    return entry.n;
+                case 'basis':
+                    return entry.agg.basisSum;
+                case 'mktcap':
+                    return entry.agg.sumMktcap;
+                case 'weight':
+                    return entry.agg.sumWeight;
+                case 'profit':
+                    return entry.agg.profitSum;
+                case 'pnlPct':
+                    return entry.agg.profitPct;
+                default:
+                    return entry.orderIdx;
+            }
+        }
+
+        function compareGroupSummaryEntries(a, b, sortKey, dirAsc) {
+            const va = groupSummarySortValue(a, sortKey);
+            const vb = groupSummarySortValue(b, sortKey);
+            const bothNum = typeof va === 'number' && typeof vb === 'number';
+            let cmp = 0;
+            if (bothNum) {
+                const na = Number.isFinite(va) ? va : dirAsc ? Infinity : -Infinity;
+                const nb = Number.isFinite(vb) ? vb : dirAsc ? Infinity : -Infinity;
+                cmp = na === nb ? 0 : na < nb ? -1 : 1;
+            } else {
+                cmp = String(va).localeCompare(String(vb), 'zh-CN');
+            }
+            if (cmp === 0) cmp = a.orderIdx - b.orderIdx;
+            return dirAsc ? cmp : -cmp;
+        }
+
+        function sortGroupSummaryBy(sortKey) {
+            if (groupSummarySortKey === sortKey) {
+                groupSummarySortDir = groupSummarySortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                groupSummarySortKey = sortKey;
+                groupSummarySortDir = 'asc';
+            }
+            renderGroupSummaryTable();
+        }
+
+        function sortTable(sortKey) {
+            if (currentSortKey === sortKey) {
+                currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortKey = sortKey;
+                currentSortDir = 'asc';
+            }
+            const dirAsc = currentSortDir === 'asc';
+            renderRows = [...originRows].sort((a, b) => compare(a, b, sortKey, dirAsc));
+            renderTable();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadClassifyFromStorage();
+
+            bindSortHeaders();
+            wireClassifyPanelOnce();
+
+            document.getElementById('btn-group-add')?.addEventListener('click', () => addGroupFromInlineInput());
+            document.getElementById('group-new-name')?.addEventListener('keydown', (ev) => {
+                if (ev.key !== 'Enter') return;
+                ev.preventDefault();
+                addGroupFromInlineInput();
+            });
+
+            const holdingsBody = document.getElementById('etfHoldingsBody');
+            if (holdingsBody) {
+                holdingsBody.addEventListener('change', (e) => {
+                    const t = e.target;
+                    if (!t || !t.classList.contains('group-pick')) return;
+                    const idx = parseInt(t.getAttribute('data-row-idx') || '-1', 10);
+                    if (!Number.isInteger(idx) || idx < 0) return;
+                    const key = String(idx);
+                    const val = String(t.value || '').trim();
+                    if (!val) {
+                        delete rowAssignments[key];
+                    } else {
+                        rowAssignments[key] = val;
+                    }
+                    validateRowAssignments();
+                    writeClassifyStored();
+                    renderGroupSummaryTable();
+                });
+            }
+
+            const input = document.getElementById('etf-file');
+            const zone = document.getElementById('upload-zone');
+            const dl = document.getElementById('btn-download-sample');
+            if (dl) dl.addEventListener('click', () => downloadSampleEtfJson());
+
+            if (!input || !zone) return;
+
+            input.addEventListener('change', () => {
+                const file = input.files && input.files[0];
+                if (!file) return;
+                readFileAsJson(file);
+                input.value = '';
+            });
+
+            zone.addEventListener('dragover', (ev) => {
+                ev.preventDefault();
+                zone.classList.add('dragover');
+            });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', (ev) => {
+                ev.preventDefault();
+                zone.classList.remove('dragover');
+                const f =
+                    ev.dataTransfer &&
+                    ev.dataTransfer.files &&
+                    ev.dataTransfer.files[0];
+                if (!f) return;
+                const okType =
+                    f.type === 'application/json' ||
+                    /\.json$/i.test(f.name || '');
+                if (!okType) {
+                    showParseError('请拖放 .json 文件。');
+                    return;
+                }
+                showParseError('');
+                readFileAsJson(f);
+            });
+        });
+    </script>
+</body>
+</html>
