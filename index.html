@@ -464,52 +464,52 @@
             <div class="metrics-grid">
             <div class="stat-card stat-card--accent">
                 <h3>最优稳定组合</h3>
-                <div class="value mono">¥ 1,839,150</div>
+                <div class="value mono" id="m-opt-final">¥ 1,839,150</div>
                 <div class="label">20年期末总资产</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>原等权组合</h3>
-                <div class="value mono">¥ 1,373,100</div>
+                <div class="value mono" id="m-ew-final">¥ 1,373,100</div>
                 <div class="label">20年期末总资产</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>累计收益率</h3>
-                <div class="value mono">819.58%</div>
+                <div class="value mono" id="m-opt-cum">819.58%</div>
                 <div class="label">最优组合</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>累计收益率</h3>
-                <div class="value mono">586.55%</div>
+                <div class="value mono" id="m-ew-cum">586.55%</div>
                 <div class="label">原等权组合</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>复合年化</h3>
-                <div class="value mono">11.26%</div>
+                <div class="value mono" id="m-opt-cagr">11.26%</div>
                 <div class="label">最优组合</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>复合年化</h3>
-                <div class="value mono">9.75%</div>
+                <div class="value mono" id="m-ew-cagr">9.75%</div>
                 <div class="label">原等权组合</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>最大回撤</h3>
-                <div class="value mono">21.1%</div>
-                <div class="label">最优组合（较等权约降低 52.9%）</div>
+                <div class="value mono" id="m-opt-dd">21.1%</div>
+                <div class="label" id="m-opt-dd-label">最优组合（较等权约降低 52.9%）</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>最大回撤</h3>
-                <div class="value mono">44.9%</div>
+                <div class="value mono" id="m-ew-dd">44.9%</div>
                 <div class="label">原等权组合</div>
             </div>
             <div class="stat-card stat-card--accent">
                 <h3>夏普比率</h3>
-                <div class="value mono">0.71</div>
+                <div class="value mono" id="m-opt-sharpe">0.71</div>
                 <div class="label">最优组合</div>
             </div>
             <div class="stat-card stat-card--muted">
                 <h3>夏普比率</h3>
-                <div class="value mono">0.37</div>
+                <div class="value mono" id="m-ew-sharpe">0.37</div>
                 <div class="label">原等权组合</div>
             </div>
             <!-- 数值由下方 PORTFOLIO_DRAWDOWN_TIMELINE 注入，与日度净值回测对齐后改脚本即可 -->
@@ -591,7 +591,7 @@
 
     <script>
         // 基金简称 establish：东方财富·天天基金 ETF 档案（fundf10.eastmoney.com/tsdata_代码.html）字段「成立日期」，与行情软件 fS_name 一致
-        const originEtfData = [
+        const BASE_ETF_DATA = [
             { id: 1, code: '510500', name: '中证500ETF南方', establish: '2013-02-06', assetClass: '国内股票', weight: 5.0, return20y: 610, maxDrawdown: -73.5, volatility: 25.1, sharpe: 0.29, type: '⚠️理论推算' },
             { id: 2, code: '159593', name: '中证A50ETF平安', establish: '2024-03-04', assetClass: '国内股票', weight: 3.0, return20y: 233, maxDrawdown: -45.8, volatility: 18.2, sharpe: 0.18, type: '⚠️理论推算' },
             { id: 3, code: '513300', name: '纳斯达克ETF华夏', establish: '2020-10-22', assetClass: '海外股票', weight: 12.0, return20y: 1392, maxDrawdown: -55.7, volatility: 22.3, sharpe: 0.50, type: '⚠️理论推算' },
@@ -610,19 +610,91 @@
             { id: 16, code: '159569', name: '港股红利低波ETF景顺', establish: '2024-08-14', assetClass: '海外股票', weight: 2.5, return20y: 359, maxDrawdown: -32.7, volatility: 14.5, sharpe: 0.34, type: '⚠️理论推算' },
             { id: 17, code: '520810', name: '港股通红利ETF易方达', establish: '2025-12-22', assetClass: '海外股票', weight: 4.5, return20y: 492, maxDrawdown: -48.1, volatility: 17.9, sharpe: 0.30, type: '⚠️理论推算' },
             { id: 18, code: '511360', name: '短融ETF海富通', establish: '2020-08-03', assetClass: '债券', weight: 8.0, return20y: 90, maxDrawdown: -2.1, volatility: 2.8, sharpe: 0.11, type: '⚠️理论推算' },
-            { id: 19, code: '511180', name: '可转债ETF海富通', establish: '2020-07-13', assetClass: '债券', weight: 5.0, return20y: 156, maxDrawdown: -10.2, volatility: 7.5, sharpe: 0.24, type: '⚠️理论推算' },
+            { id: 19, code: '511380', name: '可转债ETF博时', establish: '2020-03-06', assetClass: '债券', weight: 5.0, return20y: 156, maxDrawdown: -10.2, volatility: 7.5, sharpe: 0.24, type: '⚠️理论推算' },
             { id: 20, code: '511520', name: '政金债ETF富国', establish: '2022-08-19', assetClass: '债券', weight: 10.0, return20y: 130, maxDrawdown: -12.8, volatility: 4.2, sharpe: 0.29, type: '⚠️理论推算' }
         ];
 
+        let originEtfData = BASE_ETF_DATA.map((r) => ({ ...r }));
+
+        async function loadEtfMetricsPayload() {
+            try {
+                const r = await fetch('etf_metrics.json', { cache: 'no-store' });
+                if (!r.ok) return null;
+                return await r.json();
+            } catch {
+                return null;
+            }
+        }
+
+        function mergeEtfMetricsFromPayload(payload) {
+            if (!payload || !Array.isArray(payload.etfs)) return;
+            const byCode = new Map();
+            for (const e of payload.etfs) {
+                if (e.error || !e.code) continue;
+                byCode.set(e.code, e);
+            }
+            for (const row of originEtfData) {
+                const m = byCode.get(row.code);
+                if (!m) continue;
+                row.return20y = m.cum_return_pct;
+                row.maxDrawdown = m.max_drawdown_pct;
+                row.volatility = m.volatility_ann_pct;
+                row.sharpe = m.sharpe;
+                row.type = payload.type_label || '日频收盘·前复权';
+            }
+        }
+
+        function applyPortfolioSummaryFromPayload(payload) {
+            const ew = payload.portfolio && payload.portfolio.equal_weight;
+            const opt = payload.portfolio && payload.portfolio.optimal;
+            if (!ew || !opt) return;
+            const y = (n) => '¥ ' + Math.round(n).toLocaleString('zh-CN');
+            const el = (id) => document.getElementById(id);
+            const set = (id, txt) => {
+                const e = el(id);
+                if (e) e.textContent = txt;
+            };
+            set('m-opt-final', y(opt.final_cny));
+            set('m-ew-final', y(ew.final_cny));
+            set('m-opt-cum', Number(opt.cum_return_pct).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%');
+            set('m-ew-cum', Number(ew.cum_return_pct).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%');
+            set('m-opt-cagr', Number(opt.cagr_pct).toFixed(2) + '%');
+            set('m-ew-cagr', Number(ew.cagr_pct).toFixed(2) + '%');
+            set('m-opt-dd', Math.abs(Number(opt.max_drawdown_pct)).toFixed(1) + '%');
+            set('m-ew-dd', Math.abs(Number(ew.max_drawdown_pct)).toFixed(1) + '%');
+            set('m-opt-sharpe', Number(opt.sharpe).toFixed(2));
+            set('m-ew-sharpe', Number(ew.sharpe).toFixed(2));
+            if (payload.max_drawdown_label_optimal) {
+                const lb = el('m-opt-dd-label');
+                if (lb) lb.textContent = payload.max_drawdown_label_optimal;
+            }
+        }
+
         /**
-         * 组合层面：历史「最长」回撤片段（月，按月末净值近似；与回测程序口径须一致）。
-         * drawdownMonths：阶段高点 → 对应谷底
-         * recoveryMonths：谷底 → 净值恢复至该阶段高点
+         * 组合层面：历史「最长」回撤片段（月；脚本写入 etf_metrics.json 时将覆盖为日频曲线结果）。
          */
         const PORTFOLIO_DRAWDOWN_TIMELINE = {
             optimal: { drawdownMonths: 11, recoveryMonths: 16 },
             equalWeight: { drawdownMonths: 27, recoveryMonths: 41 }
         };
+
+        function applyDrawdownTimelineFromPayload(payload) {
+            const ew = payload.portfolio && payload.portfolio.equal_weight;
+            const opt = payload.portfolio && payload.portfolio.optimal;
+            if (opt && opt.drawdown_months != null && opt.recovery_months != null) {
+                PORTFOLIO_DRAWDOWN_TIMELINE.optimal = {
+                    drawdownMonths: Math.round(opt.drawdown_months),
+                    recoveryMonths: Math.round(opt.recovery_months)
+                };
+            }
+            if (ew && ew.drawdown_months != null && ew.recovery_months != null) {
+                PORTFOLIO_DRAWDOWN_TIMELINE.equalWeight = {
+                    drawdownMonths: Math.round(ew.drawdown_months),
+                    recoveryMonths: Math.round(ew.recovery_months)
+                };
+            }
+            applyPortfolioDrawdownTimelineCards();
+        }
 
         function applyPortfolioDrawdownTimelineCards() {
             const fmt = (d, r) => `${d} / ${r} 月`;
@@ -707,15 +779,24 @@
         }
 
         // --- 绑定表头点击排序事件 ---
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             if (typeof Chart !== 'undefined') {
                 Chart.defaults.color = '#8896ab';
                 Chart.defaults.borderColor = '#1e2d45';
                 Chart.defaults.font.family = "'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif";
             }
 
+            const live = await loadEtfMetricsPayload();
+            if (live) {
+                mergeEtfMetricsFromPayload(live);
+                applyPortfolioSummaryFromPayload(live);
+                applyDrawdownTimelineFromPayload(live);
+            } else {
+                applyPortfolioDrawdownTimelineCards();
+            }
+
+            renderData = [...originEtfData];
             renderTable();
-            applyPortfolioDrawdownTimelineCards();
 
             // 给所有可排序表头绑定点击事件
             document.querySelectorAll('#etfTable th').forEach(th => {
@@ -762,6 +843,15 @@
                 ticks: { color: '#8896ab', maxRotation: 0, font: { size: tickFontSize } }
             };
 
+            const pew = live && live.portfolio && live.portfolio.equal_weight;
+            const popt = live && live.portfolio && live.portfolio.optimal;
+            const barEw = pew ? pew.final_cny : 1373100;
+            const barOpt = popt ? popt.final_cny : 1839150;
+            const scXew = pew ? Math.abs(pew.max_drawdown_pct) : 44.9;
+            const scYew = pew ? pew.cagr_pct : 9.75;
+            const scXopt = popt ? Math.abs(popt.max_drawdown_pct) : 21.1;
+            const scYopt = popt ? popt.cagr_pct : 11.26;
+
             // 1. 总收益对比图
             const totalReturnCtx = document.getElementById('totalReturnChart').getContext('2d');
             new Chart(totalReturnCtx, {
@@ -770,7 +860,7 @@
                     labels: ['原等权组合', '最优稳定配置组合'],
                     datasets: [{
                         label: '20年期末总资产 (元)',
-                        data: [1373100, 1839150],
+                        data: [barEw, barOpt],
                         backgroundColor: [
                             'rgba(59, 138, 138, 0.82)',
                             'rgba(201, 168, 76, 0.88)'
@@ -823,7 +913,7 @@
                     datasets: [
                         {
                             label: '原等权组合',
-                            data: [{ x: 44.9, y: 9.75 }],
+                            data: [{ x: scXew, y: scYew }],
                             backgroundColor: 'rgba(59, 138, 138, 0.95)',
                             borderColor: 'rgba(59, 138, 138, 1)',
                             borderWidth: 1,
@@ -832,7 +922,7 @@
                         },
                         {
                             label: '最优稳定配置组合',
-                            data: [{ x: 21.1, y: 11.26 }],
+                            data: [{ x: scXopt, y: scYopt }],
                             backgroundColor: 'rgba(201, 168, 76, 0.95)',
                             borderColor: 'rgba(201, 168, 76, 1)',
                             borderWidth: 1,

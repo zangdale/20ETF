@@ -1,0 +1,22 @@
+[
+  {"id": 1, "code": "510500", "name": "中证500ETF南方", "establish": "2013-02-06", "assetClass": "国内股票", "weight": 5.0},
+  {"id": 2, "code": "159593", "name": "中证A50ETF平安", "establish": "2024-03-04", "assetClass": "国内股票", "weight": 3.0},
+  {"id": 3, "code": "513300", "name": "纳斯达克ETF华夏", "establish": "2020-10-22", "assetClass": "海外股票", "weight": 12.0},
+  {"id": 4, "code": "520870", "name": "巴西ETF易方达", "establish": "2025-11-05", "assetClass": "海外股票", "weight": 2.0},
+  {"id": 5, "code": "159687", "name": "亚太精选ETF南方", "establish": "2022-12-16", "assetClass": "海外股票", "weight": 2.0},
+  {"id": 6, "code": "159985", "name": "豆粕ETF华夏", "establish": "2019-09-24", "assetClass": "商品", "weight": 2.0},
+  {"id": 7, "code": "518880", "name": "黄金ETF华安", "establish": "2013-07-18", "assetClass": "黄金", "weight": 4.0},
+  {"id": 8, "code": "512400", "name": "有色金属ETF南方", "establish": "2017-08-03", "assetClass": "国内股票", "weight": 1.0},
+  {"id": 9, "code": "159222", "name": "自由现金流ETF易方达", "establish": "2025-04-09", "assetClass": "国内股票", "weight": 8.0},
+  {"id": 10, "code": "159207", "name": "高股息ETF广发", "establish": "2025-03-27", "assetClass": "国内股票", "weight": 4.0},
+  {"id": 11, "code": "563020", "name": "红利低波ETF易方达", "establish": "2023-12-06", "assetClass": "国内股票", "weight": 3.5},
+  {"id": 12, "code": "159307", "name": "红利低波100ETF博时", "establish": "2024-04-16", "assetClass": "国内股票", "weight": 3.5},
+  {"id": 13, "code": "515180", "name": "红利ETF易方达", "establish": "2019-11-26", "assetClass": "国内股票", "weight": 13.0},
+  {"id": 14, "code": "159545", "name": "恒生红利低波ETF易方达", "establish": "2024-03-27", "assetClass": "海外股票", "weight": 4.5},
+  {"id": 15, "code": "513920", "name": "港股通央企红利ETF华安", "establish": "2023-12-20", "assetClass": "海外股票", "weight": 2.5},
+  {"id": 16, "code": "159569", "name": "港股红利低波ETF景顺", "establish": "2024-08-14", "assetClass": "海外股票", "weight": 2.5},
+  {"id": 17, "code": "520810", "name": "港股通红利ETF易方达", "establish": "2025-12-22", "assetClass": "海外股票", "weight": 4.5},
+  {"id": 18, "code": "511360", "name": "短融ETF海富通", "establish": "2020-08-03", "assetClass": "债券", "weight": 8.0},
+  {"id": 19, "code": "511380", "name": "可转债ETF博时", "establish": "2020-03-06", "assetClass": "债券", "weight": 5.0},
+  {"id": 20, "code": "511520", "name": "政金债ETF富国", "establish": "2022-08-19", "assetClass": "债券", "weight": 10.0}
+]

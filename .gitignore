@@ -18,6 +18,7 @@ env/
 
 # Local outputs（脚本抓取结果等）
 etf_meta.json
+etf_metrics.json
 *.csv
 
 # Logs
