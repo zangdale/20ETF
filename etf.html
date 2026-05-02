@@ -484,6 +484,154 @@
             border-color: rgba(201, 168, 76, 0.45);
         }
 
+        .detail-upload-card {
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+        .upload-actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            justify-content: center;
+            align-items: center;
+        }
+        .sample-download-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .detail-crud-box {
+            margin-bottom: 16px;
+            padding: 14px 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+        }
+        .detail-crud-head {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .detail-crud-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px 12px;
+            align-items: end;
+            margin-bottom: 12px;
+        }
+        .detail-field label {
+            display: block;
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+        .detail-field .group-name-edit {
+            width: 100%;
+        }
+        .detail-crud-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .detail-crud-actions .btn-classify--ghost {
+            border-style: dashed;
+            color: var(--text-secondary);
+        }
+        .detail-crud-actions .btn-classify--ghost:hover {
+            color: var(--gold);
+        }
+        #etfHoldingsTable th.detail-action-th,
+        #etfHoldingsTable td.detail-action-cell {
+            width: 108px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        #etfHoldingsTable .detail-row-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        #etfHoldingsTable.panel-table--col-custom,
+        #groupSummaryTable.panel-table--col-custom {
+            table-layout: fixed;
+        }
+        #etfHoldingsTable thead th,
+        #groupSummaryTable thead th {
+            position: relative;
+            vertical-align: middle;
+            box-sizing: border-box;
+        }
+        .th-inner {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            padding-right: 10px;
+        }
+        .col-drag-handle {
+            cursor: grab;
+            color: var(--text-dim);
+            font-size: 0.62rem;
+            letter-spacing: -0.08em;
+            user-select: none;
+            flex-shrink: 0;
+            line-height: 1;
+            padding: 3px 4px;
+            border-radius: 4px;
+            transition: color var(--transition-fast), background var(--transition-fast);
+        }
+        .col-drag-handle:hover {
+            color: var(--gold);
+            background: rgba(201, 168, 76, 0.08);
+        }
+        .col-drag-handle:active {
+            cursor: grabbing;
+        }
+        .col-label {
+            flex: 1;
+            min-width: 0;
+            font-weight: inherit;
+        }
+        #etfHoldingsTable thead th[data-sort] .col-label,
+        #groupSummaryTable thead th[data-sort] .col-label {
+            cursor: pointer;
+        }
+        #etfHoldingsTable thead th[data-sort] .col-label:hover,
+        #groupSummaryTable thead th[data-sort] .col-label:hover {
+            color: var(--gold);
+        }
+        .col-resize-grip {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            cursor: col-resize;
+            z-index: 3;
+            touch-action: none;
+        }
+        .col-resize-grip::after {
+            content: "";
+            position: absolute;
+            right: 3px;
+            top: 18%;
+            bottom: 18%;
+            width: 1px;
+            background: rgba(136, 150, 171, 0.35);
+            transition: background var(--transition-fast);
+        }
+        .col-resize-grip:hover::after {
+            background: rgba(201, 168, 76, 0.65);
+        }
+
         .upload-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -680,37 +828,12 @@
     <main class="container">
         <header class="page-hero">
             <h1>持仓清单 · etf.json</h1>
-            <p class="hero-sub">在本页<strong>上传</strong>导出的 <code style="font-family:var(--font-mono);font-size:0.85em;">etf.json</code>（可选拖放）；解析在浏览器本地完成，不上传服务器。表头可排序；盈亏按成本与现价粗略估算。</p>
+            <p class="hero-sub">在下方<strong>明细表</strong>区域拖放或选择 <code style="font-family:var(--font-mono);font-size:0.85em;">etf.json</code>；解析在浏览器本地完成，不上传服务器。支持<strong>添加、编辑、删除</strong>明细，变更写入浏览器本地存储。表头可排序；盈亏按成本与现价粗略估算。</p>
         </header>
 
         <div class="disclaimer" role="note">
             <strong>说明：</strong>数据来源于你选择的本地文件，仅供个人核对持仓与权重；不构成任何投资建议。
         </div>
-
-        <section class="panel" aria-labelledby="sec-upload">
-            <div class="panel-head">
-                <span class="accent-line" aria-hidden="true"></span>
-                <h2 id="sec-upload" class="panel-title">载入数据</h2>
-                <span class="panel-sub">选择或拖放 JSON 文件</span>
-            </div>
-            <div class="upload-card">
-                <input type="file" id="etf-file" class="upload-input" accept=".json,application/json" />
-                <label for="etf-file" class="upload-zone" id="upload-zone">
-                    <span class="upload-title">ETF 持仓 JSON</span>
-                    <span class="upload-cta">点击选择文件</span>
-                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组，字段与导出一致：名称、编号、市值、仓位、持仓、可用持仓、成本、现价</span>
-                </label>
-                <p class="upload-hint">也可将 <span class="mono">etf.json</span> 拖入上方区域</p>
-                <div class="upload-actions">
-                    <button type="button" class="sample-download-btn" id="btn-download-sample" aria-label="下载案例 JSON 文件 etf-sample.json">
-                        下载案例 <span class="fname">etf-sample.json</span>
-                    </button>
-                    <span class="upload-actions-hint">少量示例行，格式与真实导出一致；下载后可再上传本页试看，或按此结构替换为你的数据。您可以使用AI将持仓截图转换为JSON格式。</span>
-                </div>
-                <p class="file-meta" id="file-meta" hidden>当前文件：<strong id="file-name"></strong></p>
-            </div>
-            <div id="parse-error" class="state-msg error" style="padding-top:8px;" hidden></div>
-        </section>
 
         <section class="panel" aria-labelledby="sec-summary">
             <div class="panel-head">
@@ -768,25 +891,77 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-table" class="panel-title">明细表</h2>
-                <span class="panel-sub">点击表头排序；序号列为<strong>导入文件中的行序</strong>（排序后不变）</span>
+                <span class="panel-sub">表头左侧 <strong>⋮⋮</strong> 可拖拽调列序，右缘可拖调列宽（配置存浏览器）；点击文字排序。下方载入区用于<strong>导入 / 导出</strong>与案例下载；编辑后的数据保存在本机浏览器</span>
             </div>
-            <p id="table-placeholder" class="state-msg">上传 JSON 后将在此显示明细表。</p>
+            <div class="upload-card detail-upload-card">
+                <input type="file" id="etf-file" class="upload-input" accept=".json,application/json" />
+                <label for="etf-file" class="upload-zone" id="upload-zone">
+                    <span class="upload-title">ETF 持仓 JSON</span>
+                    <span class="upload-cta">点击选择文件</span>
+                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组，字段与导出一致：名称、编号、市值、仓位、持仓、可用持仓、成本、现价；导入将<strong>替换</strong>当前明细并写入本地存储</span>
+                </label>
+                <p class="upload-hint">也可将 <span class="mono">etf.json</span> 拖入上方区域</p>
+                <div class="upload-actions">
+                    <div class="upload-actions-row">
+                        <button type="button" class="sample-download-btn" id="btn-download-sample" aria-label="下载案例 JSON 文件 etf-sample.json">
+                            下载案例 <span class="fname">etf-sample.json</span>
+                        </button>
+                        <button type="button" class="sample-download-btn" id="btn-export-holdings" aria-label="导出当前持仓为 etf.json" disabled>
+                            导出当前 <span class="fname">etf.json</span>
+                        </button>
+                    </div>
+                    <span class="upload-actions-hint">少量示例行与真实导出格式一致；导出文件可供备份或在外部编辑后再拖回本页载入。也可使用 AI 将持仓截图转换为 JSON。</span>
+                </div>
+                <p class="file-meta" id="file-meta" hidden>当前数据：<strong id="file-name"></strong></p>
+            </div>
+            <div id="parse-error" class="state-msg error" style="padding-top:8px;margin-bottom:4px;" hidden></div>
+            <div class="detail-crud-box" id="detail-crud-box" hidden>
+                <div class="detail-crud-head" id="detail-crud-head">添加明细</div>
+                <div class="detail-crud-grid">
+                    <div class="detail-field">
+                        <label for="detail-name">名称</label>
+                        <input type="text" id="detail-name" class="group-name-edit" maxlength="64" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-code">编号</label>
+                        <input type="text" id="detail-code" class="group-name-edit mono" maxlength="32" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-mktcap">市值</label>
+                        <input type="text" id="detail-mktcap" class="group-name-edit mono" inputmode="decimal" placeholder="元" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-weight">仓位</label>
+                        <input type="text" id="detail-weight" class="group-name-edit mono" placeholder="如 1.2%" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-shares">持仓</label>
+                        <input type="text" id="detail-shares" class="group-name-edit mono" inputmode="decimal" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-avail">可用持仓</label>
+                        <input type="text" id="detail-avail" class="group-name-edit mono" inputmode="decimal" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-cost">成本</label>
+                        <input type="text" id="detail-cost" class="group-name-edit mono" inputmode="decimal" autocomplete="off" />
+                    </div>
+                    <div class="detail-field">
+                        <label for="detail-price">现价</label>
+                        <input type="text" id="detail-price" class="group-name-edit mono" inputmode="decimal" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="detail-crud-actions">
+                    <button type="button" class="btn-classify btn-classify--primary" id="btn-detail-commit">添加</button>
+                    <button type="button" class="btn-classify btn-classify--ghost" id="btn-detail-cancel-edit" hidden>取消编辑</button>
+                </div>
+            </div>
+            <p id="table-placeholder" class="state-msg">上传 JSON、导入文件或加载浏览器已存数据后将在此显示明细表。</p>
             <div class="table-wrap" id="table-wrap" hidden>
-                <table id="etfHoldingsTable" class="panel-table">
+                <table id="etfHoldingsTable" class="panel-table panel-table--col-custom">
+                    <colgroup id="etfHoldingsColgroup"></colgroup>
                     <thead>
-                        <tr>
-                            <th data-sort="index" title="JSON 中行顺序（1 起），与排序无关">序号</th>
-                            <th data-sort="name">名称</th>
-                            <th data-sort="code">编号</th>
-                            <th data-sort="mktcap">市值</th>
-                            <th data-sort="weight">仓位</th>
-                            <th data-sort="shares">持仓</th>
-                            <th data-sort="avail">可用持仓</th>
-                            <th data-sort="cost">成本</th>
-                            <th data-sort="price">现价</th>
-                            <th data-sort="pnlPct">盈亏%</th>
-                            <th class="group-sort-th mono" scope="col" data-sort="group">分组</th>
-                        </tr>
+                        <tr id="etfHoldingsHeadRow"></tr>
                     </thead>
                     <tbody id="etfHoldingsBody"></tbody>
                 </table>
@@ -797,7 +972,7 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-classify" class="panel-title">分组明细表</h2>
-                <span class="panel-sub">在<strong>明细表「分组」列</strong>为每条持仓指定分组；以下为各分组标的数与 Σ 持仓成本（元）、市值、仓位及浮盈；含「（未分组）」行（默认在行末）；<strong>点击表头</strong>可排序；配置保存在浏览器本地。</span>
+                <span class="panel-sub">表头 <strong>⋮⋮</strong> 调列序、右缘调列宽（本地保存）；点击文字排序。在明细表「分组」列指定分组；含「（未分组）」行</span>
             </div>
             <div class="group-add-box">
                 <input
@@ -813,18 +988,10 @@
             </div>
             <p id="group-summary-placeholder" class="state-msg group-summary-placeholder-msg" hidden>暂无持仓数据。</p>
             <div class="table-wrap" id="group-summary-wrap">
-                <table class="panel-table panel-table--static-head" id="groupSummaryTable">
+                <table class="panel-table panel-table--col-custom" id="groupSummaryTable">
+                    <colgroup id="groupSummaryColgroup"></colgroup>
                     <thead>
-                        <tr>
-                            <th data-sort="label" scope="col">分组</th>
-                            <th class="mono" data-sort="count">标的数</th>
-                            <th class="mono" data-sort="basis">持仓成本Σ（元）</th>
-                            <th class="mono" data-sort="mktcap">市值Σ（元）</th>
-                            <th class="mono" data-sort="weight">仓位Σ</th>
-                            <th class="mono" data-sort="profit">浮盈Σ（元）</th>
-                            <th class="mono" data-sort="pnlPct">浮盈%</th>
-                            <th class="manage-action-th">操作</th>
-                        </tr>
+                        <tr id="groupSummaryHeadRow"></tr>
                     </thead>
                     <tbody id="groupSummaryBody"></tbody>
                 </table>
@@ -862,16 +1029,23 @@
             return Number.isFinite(n) ? n : NaN;
         }
 
+        /** JSON 中 null/空串按缺失处理，避免 Number(null)===0 */
+        function numOrNaN(v) {
+            if (v === undefined || v === null || v === '') return NaN;
+            const n = Number(v);
+            return Number.isFinite(n) ? n : NaN;
+        }
+
         /** @param {any} raw */
         function normalizeRow(raw, idx) {
             const name = raw['名称'] ?? '';
             const code = String(raw['编号'] ?? '');
-            const mktcap = Number(raw['市值']);
+            const mktcap = numOrNaN(raw['市值']);
             const weightStr = raw['仓位'] ?? '0%';
-            const shares = Number(raw['持仓']);
-            const avail = Number(raw['可用持仓']);
-            const cost = Number(raw['成本']);
-            const price = Number(raw['现价']);
+            const shares = numOrNaN(raw['持仓']);
+            const avail = numOrNaN(raw['可用持仓']);
+            const cost = numOrNaN(raw['成本']);
+            const price = numOrNaN(raw['现价']);
             const weightNum = parsePercent(weightStr);
             let pnlPct = NaN;
             if (Number.isFinite(cost) && cost !== 0 && Number.isFinite(price)) {
@@ -917,6 +1091,10 @@
         let groupSummarySortKey = null;
         let groupSummarySortDir = 'asc';
 
+        const HOLDINGS_LS_KEY = 'etf20:etf-holdings:v1';
+        /** @type {number | null} */
+        let editingDetailIdx = null;
+
         const CLASSIFY_LS_KEY = 'etf20:etf-classify-groups:v1';
         /** @type {{ id: string, name: string }[]} */
         let classifyGroups = [];
@@ -924,6 +1102,56 @@
         let rowAssignments = {};
         /** 待从 v1（含 codes 数组）迁移 */
         let pendingV1Migrate = null;
+
+        const TABLE_LAYOUT_LS_KEY = 'etf20:table-layout:v1';
+        const DEFAULT_HOLDINGS_COL_ORDER = [
+            'index',
+            'name',
+            'code',
+            'mktcap',
+            'weight',
+            'shares',
+            'avail',
+            'cost',
+            'price',
+            'pnlPct',
+            'group',
+            'actions'
+        ];
+        const HOLDINGS_COL_META = {
+            index: { sort: 'index', label: '序号', title: '行顺序（1 起），与排序无关', thClass: 'mono', defaultWidth: 52 },
+            name: { sort: 'name', label: '名称', defaultWidth: 108 },
+            code: { sort: 'code', label: '编号', defaultWidth: 88 },
+            mktcap: { sort: 'mktcap', label: '市值', thClass: 'mono', defaultWidth: 92 },
+            weight: { sort: 'weight', label: '仓位', thClass: 'mono', defaultWidth: 72 },
+            shares: { sort: 'shares', label: '持仓', thClass: 'mono', defaultWidth: 72 },
+            avail: { sort: 'avail', label: '可用持仓', thClass: 'mono', defaultWidth: 88 },
+            cost: { sort: 'cost', label: '成本', thClass: 'mono', defaultWidth: 72 },
+            price: { sort: 'price', label: '现价', thClass: 'mono', defaultWidth: 72 },
+            pnlPct: { sort: 'pnlPct', label: '盈亏%', thClass: 'mono', defaultWidth: 76 },
+            group: { sort: 'group', label: '分组', thClass: 'group-sort-th mono', defaultWidth: 136 },
+            actions: { label: '操作', thClass: 'detail-action-th', defaultWidth: 108 }
+        };
+        const DEFAULT_GROUP_COL_ORDER = ['label', 'count', 'basis', 'mktcap', 'weight', 'profit', 'pnlPct', 'actions'];
+        const GROUP_COL_META = {
+            label: { sort: 'label', label: '分组', defaultWidth: 148 },
+            count: { sort: 'count', label: '标的数', thClass: 'mono', defaultWidth: 72 },
+            basis: { sort: 'basis', label: '持仓成本Σ（元）', thClass: 'mono', defaultWidth: 126 },
+            mktcap: { sort: 'mktcap', label: '市值Σ（元）', thClass: 'mono', defaultWidth: 108 },
+            weight: { sort: 'weight', label: '仓位Σ', thClass: 'mono', defaultWidth: 80 },
+            profit: { sort: 'profit', label: '浮盈Σ（元）', thClass: 'mono', defaultWidth: 108 },
+            pnlPct: { sort: 'pnlPct', label: '浮盈%', thClass: 'mono', defaultWidth: 76 },
+            actions: { label: '操作', thClass: 'manage-action-th', defaultWidth: 96 }
+        };
+
+        /** @type {{ order: string[], widths: Record<string, number> }} */
+        let holdingsLayout = { order: [...DEFAULT_HOLDINGS_COL_ORDER], widths: {} };
+        /** @type {{ order: string[], widths: Record<string, number> }} */
+        let groupLayout = { order: [...DEFAULT_GROUP_COL_ORDER], widths: {} };
+
+        /** @type {{ which: 'holdings' | 'group', colId: string, startX: number, startW: number } | null} */
+        let tableColResizeActive = null;
+        let lastTableColDragAt = 0;
 
         function newGroupId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -983,6 +1211,347 @@
             }
         }
 
+        function normalizeTableLayout(saved, defaultOrder, meta) {
+            const def = [...defaultOrder];
+            let order = [];
+            if (saved && Array.isArray(saved.order)) {
+                order = saved.order.filter((id) => meta[id]);
+            }
+            for (const id of def) {
+                if (!order.includes(id)) order.push(id);
+            }
+            order = order.filter((id) => meta[id]);
+            const widths = {};
+            if (saved && saved.widths && typeof saved.widths === 'object') {
+                for (const id of order) {
+                    const w = Number(saved.widths[id]);
+                    if (Number.isFinite(w) && w >= 40 && w <= 800) widths[id] = Math.round(w);
+                }
+            }
+            return { order, widths };
+        }
+
+        function loadTableLayoutsFromStorage() {
+            try {
+                const raw = localStorage.getItem(TABLE_LAYOUT_LS_KEY);
+                if (!raw) {
+                    holdingsLayout = { order: [...DEFAULT_HOLDINGS_COL_ORDER], widths: {} };
+                    groupLayout = { order: [...DEFAULT_GROUP_COL_ORDER], widths: {} };
+                    return;
+                }
+                const o = JSON.parse(raw);
+                if (o && o.v === 1) {
+                    holdingsLayout = normalizeTableLayout(o.holdings, DEFAULT_HOLDINGS_COL_ORDER, HOLDINGS_COL_META);
+                    groupLayout = normalizeTableLayout(o.groupSummary, DEFAULT_GROUP_COL_ORDER, GROUP_COL_META);
+                } else {
+                    holdingsLayout = { order: [...DEFAULT_HOLDINGS_COL_ORDER], widths: {} };
+                    groupLayout = { order: [...DEFAULT_GROUP_COL_ORDER], widths: {} };
+                }
+            } catch {
+                holdingsLayout = { order: [...DEFAULT_HOLDINGS_COL_ORDER], widths: {} };
+                groupLayout = { order: [...DEFAULT_GROUP_COL_ORDER], widths: {} };
+            }
+        }
+
+        function writeTableLayoutsToStorage() {
+            try {
+                localStorage.setItem(
+                    TABLE_LAYOUT_LS_KEY,
+                    JSON.stringify({
+                        v: 1,
+                        holdings: { order: [...holdingsLayout.order], widths: { ...holdingsLayout.widths } },
+                        groupSummary: { order: [...groupLayout.order], widths: { ...groupLayout.widths } }
+                    })
+                );
+            } catch {
+                /* ignore */
+            }
+        }
+
+        function colWidthPx(layout, meta, colId) {
+            const m = meta[colId];
+            if (!m) return 80;
+            const w = layout.widths[colId];
+            return Number.isFinite(w) && w >= 40 ? w : m.defaultWidth;
+        }
+
+        function applyHoldingsTableLayout() {
+            const cg = document.getElementById('etfHoldingsColgroup');
+            const tr = document.getElementById('etfHoldingsHeadRow');
+            if (!cg || !tr) return;
+            cg.innerHTML = '';
+            tr.innerHTML = '';
+            for (const colId of holdingsLayout.order) {
+                const meta = HOLDINGS_COL_META[colId];
+                if (!meta) continue;
+                const w = colWidthPx(holdingsLayout, HOLDINGS_COL_META, colId);
+                const colEl = document.createElement('col');
+                colEl.style.width = w + 'px';
+                cg.appendChild(colEl);
+
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.dataset.col = colId;
+                if (meta.sort) th.dataset.sort = meta.sort;
+                if (meta.title) th.title = meta.title;
+                if (meta.thClass) th.className = meta.thClass;
+
+                const inner = document.createElement('div');
+                inner.className = 'th-inner';
+                const drag = document.createElement('span');
+                drag.className = 'col-drag-handle';
+                drag.draggable = true;
+                drag.setAttribute('aria-label', '拖拽调整列顺序');
+                drag.textContent = '⋮⋮';
+                inner.appendChild(drag);
+                const lab = document.createElement('span');
+                lab.className = 'col-label';
+                lab.textContent = meta.label;
+                inner.appendChild(lab);
+                th.appendChild(inner);
+
+                const rz = document.createElement('span');
+                rz.className = 'col-resize-grip';
+                rz.dataset.resizeCol = colId;
+                rz.setAttribute('aria-hidden', 'true');
+                th.appendChild(rz);
+
+                tr.appendChild(th);
+            }
+            updateHoldingsSortHeaderClasses();
+        }
+
+        function applyGroupTableLayout() {
+            const cg = document.getElementById('groupSummaryColgroup');
+            const tr = document.getElementById('groupSummaryHeadRow');
+            if (!cg || !tr) return;
+            cg.innerHTML = '';
+            tr.innerHTML = '';
+            for (const colId of groupLayout.order) {
+                const meta = GROUP_COL_META[colId];
+                if (!meta) continue;
+                const w = colWidthPx(groupLayout, GROUP_COL_META, colId);
+                const colEl = document.createElement('col');
+                colEl.style.width = w + 'px';
+                cg.appendChild(colEl);
+
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.dataset.col = colId;
+                if (meta.sort) th.dataset.sort = meta.sort;
+                if (meta.thClass) th.className = meta.thClass;
+
+                const inner = document.createElement('div');
+                inner.className = 'th-inner';
+                const drag = document.createElement('span');
+                drag.className = 'col-drag-handle';
+                drag.draggable = true;
+                drag.setAttribute('aria-label', '拖拽调整列顺序');
+                drag.textContent = '⋮⋮';
+                inner.appendChild(drag);
+                const lab = document.createElement('span');
+                lab.className = 'col-label';
+                lab.textContent = meta.label;
+                inner.appendChild(lab);
+                th.appendChild(inner);
+
+                const rz = document.createElement('span');
+                rz.className = 'col-resize-grip';
+                rz.dataset.resizeCol = colId;
+                rz.setAttribute('aria-hidden', 'true');
+                th.appendChild(rz);
+
+                tr.appendChild(th);
+            }
+            updateGroupSortHeaderClasses();
+        }
+
+        function updateHoldingsSortHeaderClasses() {
+            document.querySelectorAll('#etfHoldingsTable thead th[data-sort]').forEach((th) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.sort === currentSortKey) {
+                    th.classList.add(`sort-${currentSortDir}`);
+                }
+            });
+        }
+
+        function updateGroupSortHeaderClasses() {
+            document.querySelectorAll('#groupSummaryTable thead th[data-sort]').forEach((th) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (groupSummarySortKey && th.dataset.sort === groupSummarySortKey) {
+                    th.classList.add(`sort-${groupSummarySortDir}`);
+                }
+            });
+        }
+
+        function reorderHoldingsColumn(draggedId, dropColId) {
+            const o = holdingsLayout.order;
+            const i = o.indexOf(draggedId);
+            const j = o.indexOf(dropColId);
+            if (i < 0 || j < 0 || i === j) return;
+            o.splice(i, 1);
+            o.splice(j, 0, draggedId);
+            lastTableColDragAt = Date.now();
+            writeTableLayoutsToStorage();
+            applyHoldingsTableLayout();
+            renderTable();
+        }
+
+        function reorderGroupColumn(draggedId, dropColId) {
+            const o = groupLayout.order;
+            const i = o.indexOf(draggedId);
+            const j = o.indexOf(dropColId);
+            if (i < 0 || j < 0 || i === j) return;
+            o.splice(i, 1);
+            o.splice(j, 0, draggedId);
+            lastTableColDragAt = Date.now();
+            writeTableLayoutsToStorage();
+            applyGroupTableLayout();
+            renderGroupSummaryTable();
+        }
+
+        function buildHoldingRowCellsHtml(r, pnlClass, pickCell) {
+            const parts = {};
+            parts.index = `<td class="mono">${r._idx + 1}</td>`;
+            parts.name = `<td>${escapeHtml(r.name)}</td>`;
+            parts.code = `<td><strong class="mono">${escapeHtml(r.code)}</strong></td>`;
+            parts.mktcap = `<td class="mono">${fmtMoney(r.mktcap)}</td>`;
+            parts.weight = `<td class="mono"><strong>${escapeHtml(r.weightStr)}</strong></td>`;
+            parts.shares = `<td class="mono">${Number.isFinite(r.shares) ? String(r.shares) : '—'}</td>`;
+            parts.avail = `<td class="mono">${Number.isFinite(r.avail) ? String(r.avail) : '—'}</td>`;
+            parts.cost = `<td class="mono">${fmtPrice(r.cost)}</td>`;
+            parts.price = `<td class="mono">${fmtPrice(r.price)}</td>`;
+            parts.pnlPct = `<td class="${pnlClass}">${fmtPnl(r.pnlPct)}</td>`;
+            parts.group = `<td class="group-cell-td">${pickCell}</td>`;
+            parts.actions = `<td class="detail-action-cell"><div class="detail-row-btns">
+                            <button type="button" class="btn-classify btn-classify--small" data-detail-edit="${r._idx}" aria-label="编辑此行">编辑</button>
+                            <button type="button" class="btn-classify btn-classify--danger btn-classify--small" data-detail-del="${r._idx}" aria-label="删除此行">删除</button>
+                        </div></td>`;
+            let html = '';
+            for (const colId of holdingsLayout.order) {
+                if (parts[colId]) html += parts[colId];
+            }
+            return html;
+        }
+
+        function syncColgroupCellWidth(which, colId, px) {
+            const layout = which === 'holdings' ? holdingsLayout : groupLayout;
+            const idx = layout.order.indexOf(colId);
+            if (idx < 0) return;
+            const cg = document.getElementById(which === 'holdings' ? 'etfHoldingsColgroup' : 'groupSummaryColgroup');
+            const c = cg && cg.children[idx];
+            if (c) c.style.width = px + 'px';
+        }
+
+        function wireTableColumnsInteractionsOnce() {
+            const etf = document.getElementById('etfHoldingsTable');
+            const grp = document.getElementById('groupSummaryTable');
+            if (etf && etf.dataset.colWired !== '1') {
+                etf.dataset.colWired = '1';
+                etf.querySelector('thead')?.addEventListener('click', (e) => {
+                    if (Date.now() - lastTableColDragAt < 380) return;
+                    if (e.target.closest('.col-resize-grip') || e.target.closest('.col-drag-handle')) return;
+                    const th = e.target.closest('thead th[data-sort]');
+                    if (!th) return;
+                    sortTable(th.dataset.sort);
+                });
+                etf.querySelector('thead')?.addEventListener('dragstart', (e) => {
+                    const h = e.target.closest('.col-drag-handle');
+                    if (!h) return;
+                    const th = h.closest('th');
+                    const id = th && th.dataset.col;
+                    if (!id) return;
+                    e.dataTransfer.setData('application/x-etf-col', id);
+                    e.dataTransfer.setData('text/plain', id);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                etf.querySelector('thead')?.addEventListener('dragover', (e) => {
+                    const types = e.dataTransfer.types || [];
+                    const list = typeof types.includes === 'function' ? types : Array.from(types);
+                    const ok = list.includes('application/x-etf-col') || list.includes('text/plain');
+                    if (ok) e.preventDefault();
+                });
+                etf.querySelector('thead')?.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const dragged = e.dataTransfer.getData('application/x-etf-col');
+                    const th = e.target.closest('th');
+                    const dropId = th && th.dataset.col;
+                    if (!dragged || !dropId) return;
+                    reorderHoldingsColumn(dragged, dropId);
+                });
+            }
+            if (grp && grp.dataset.colWired !== '1') {
+                grp.dataset.colWired = '1';
+                grp.querySelector('thead')?.addEventListener('click', (e) => {
+                    if (Date.now() - lastTableColDragAt < 380) return;
+                    if (e.target.closest('.col-resize-grip') || e.target.closest('.col-drag-handle')) return;
+                    const th = e.target.closest('thead th[data-sort]');
+                    if (!th) return;
+                    sortGroupSummaryBy(th.dataset.sort);
+                });
+                grp.querySelector('thead')?.addEventListener('dragstart', (e) => {
+                    const h = e.target.closest('.col-drag-handle');
+                    if (!h) return;
+                    const th = h.closest('th');
+                    const id = th && th.dataset.col;
+                    if (!id) return;
+                    e.dataTransfer.setData('application/x-etf-group-col', id);
+                    e.dataTransfer.setData('text/plain', 'group:' + id);
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                grp.querySelector('thead')?.addEventListener('dragover', (e) => {
+                    const types = e.dataTransfer.types || [];
+                    const list = typeof types.includes === 'function' ? types : Array.from(types);
+                    const ok = list.includes('application/x-etf-group-col') || list.includes('text/plain');
+                    if (ok) e.preventDefault();
+                });
+                grp.querySelector('thead')?.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const dragged = e.dataTransfer.getData('application/x-etf-group-col');
+                    const th = e.target.closest('th');
+                    const dropId = th && th.dataset.col;
+                    if (!dragged || !dropId) return;
+                    reorderGroupColumn(dragged, dropId);
+                });
+            }
+            if (document.documentElement.dataset.tableResizeWired !== '1') {
+                document.documentElement.dataset.tableResizeWired = '1';
+                document.addEventListener('mousedown', (e) => {
+                    const grip = e.target.closest('.col-resize-grip');
+                    if (!grip) return;
+                    const th = grip.closest('th');
+                    const table = grip.closest('table');
+                    if (!th || !table) return;
+                    const colId = grip.dataset.resizeCol || th.dataset.col;
+                    if (!colId) return;
+                    const which = table.id === 'etfHoldingsTable' ? 'holdings' : 'group';
+                    const rect = th.getBoundingClientRect();
+                    tableColResizeActive = { which, colId, startX: e.clientX, startW: rect.width };
+                    e.preventDefault();
+                    document.body.style.cursor = 'col-resize';
+                });
+                document.addEventListener('mousemove', (e) => {
+                    if (!tableColResizeActive) return;
+                    const { which, colId, startX, startW } = tableColResizeActive;
+                    const dx = e.clientX - startX;
+                    const nw = Math.round(Math.max(48, Math.min(640, startW + dx)));
+                    if (which === 'holdings') {
+                        holdingsLayout.widths[colId] = nw;
+                        syncColgroupCellWidth('holdings', colId, nw);
+                    } else {
+                        groupLayout.widths[colId] = nw;
+                        syncColgroupCellWidth('group', colId, nw);
+                    }
+                });
+                document.addEventListener('mouseup', () => {
+                    if (!tableColResizeActive) return;
+                    tableColResizeActive = null;
+                    document.body.style.cursor = '';
+                    writeTableLayoutsToStorage();
+                });
+            }
+        }
+
         function pruneRowAssignmentsToLength(n) {
             const next = {};
             for (const [k, v] of Object.entries(rowAssignments)) {
@@ -991,6 +1560,212 @@
                 next[k] = v;
             }
             rowAssignments = next;
+        }
+
+        /** 删除 origin 中下标 delIdx 后，平移 rowAssignments */
+        function remapRowAssignmentsAfterDelete(delIdx) {
+            if (!Number.isInteger(delIdx) || delIdx < 0) return;
+            const next = {};
+            for (const [k, v] of Object.entries(rowAssignments)) {
+                const old = parseInt(k, 10);
+                if (!Number.isInteger(old)) continue;
+                if (old === delIdx) continue;
+                const newIdx = old < delIdx ? old : old - 1;
+                next[String(newIdx)] = v;
+            }
+            rowAssignments = next;
+        }
+
+        /** @param {ReturnType<typeof normalizeRow>} r */
+        function rowToExportObject(r) {
+            return {
+                名称: r.name,
+                编号: r.code,
+                市值: Number.isFinite(r.mktcap) ? r.mktcap : null,
+                仓位: r.weightStr || '0%',
+                持仓: Number.isFinite(r.shares) ? r.shares : null,
+                可用持仓: Number.isFinite(r.avail) ? r.avail : null,
+                成本: Number.isFinite(r.cost) ? r.cost : null,
+                现价: Number.isFinite(r.price) ? r.price : null
+            };
+        }
+
+        function holdingsPayloadFromOrigin() {
+            return originRows.map((r) => rowToExportObject(r));
+        }
+
+        function saveHoldingsToLocal() {
+            try {
+                localStorage.setItem(HOLDINGS_LS_KEY, JSON.stringify(holdingsPayloadFromOrigin()));
+            } catch {
+                /* ignore */
+            }
+        }
+
+        function tryLoadHoldingsFromLocal() {
+            try {
+                const raw = localStorage.getItem(HOLDINGS_LS_KEY);
+                if (!raw) return null;
+                const data = JSON.parse(raw);
+                if (!Array.isArray(data)) return null;
+                return data;
+            } catch {
+                return null;
+            }
+        }
+
+        function clearHoldingsLocal() {
+            try {
+                localStorage.removeItem(HOLDINGS_LS_KEY);
+            } catch {
+                /* ignore */
+            }
+        }
+
+        function setDetailEditorVisibility(hasRows) {
+            const box = document.getElementById('detail-crud-box');
+            if (box) box.hidden = !hasRows;
+        }
+
+        function downloadHoldingsJson() {
+            if (!originRows.length) return;
+            const text = JSON.stringify(holdingsPayloadFromOrigin(), null, 2);
+            const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'etf.json';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function refreshRenderOrder() {
+            const dirAsc = currentSortDir === 'asc';
+            renderRows = [...originRows].sort((a, b) => compare(a, b, currentSortKey, dirAsc));
+            renderTable();
+        }
+
+        function reindexOriginRowsInPlace() {
+            originRows = originRows.map((r, i) => normalizeRow(rowToExportObject(r), i));
+        }
+
+        /** 增删改或上传后统一持久化并刷新视图 */
+        function persistHoldingsAndRefresh() {
+            pruneRowAssignmentsToLength(originRows.length);
+            validateRowAssignments();
+            saveHoldingsToLocal();
+            updateSummary(originRows);
+            refreshRenderOrder();
+            refreshGroupingPanels();
+            writeClassifyStored();
+        }
+
+        /** 从表单读取原始对象并 normalize（用于新增或覆盖编辑） */
+        function readDetailFormRaw() {
+            const name = String(document.getElementById('detail-name')?.value || '').trim();
+            const code = String(document.getElementById('detail-code')?.value || '').trim();
+            const mktcap = String(document.getElementById('detail-mktcap')?.value || '').trim();
+            const weight = String(document.getElementById('detail-weight')?.value || '').trim();
+            const shares = String(document.getElementById('detail-shares')?.value || '').trim();
+            const avail = String(document.getElementById('detail-avail')?.value || '').trim();
+            const cost = String(document.getElementById('detail-cost')?.value || '').trim();
+            const price = String(document.getElementById('detail-price')?.value || '').trim();
+            const weightStr = weight === '' ? '0%' : weight;
+            return {
+                名称: name,
+                编号: code,
+                市值: mktcap === '' ? null : mktcap,
+                仓位: weightStr,
+                持仓: shares === '' ? null : shares,
+                可用持仓: avail === '' ? null : avail,
+                成本: cost === '' ? null : cost,
+                现价: price === '' ? null : price
+            };
+        }
+
+        function clearDetailForm() {
+            editingDetailIdx = null;
+            ['detail-name', 'detail-code', 'detail-mktcap', 'detail-weight', 'detail-shares', 'detail-avail', 'detail-cost', 'detail-price'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const head = document.getElementById('detail-crud-head');
+            const commit = document.getElementById('btn-detail-commit');
+            const cancel = document.getElementById('btn-detail-cancel-edit');
+            if (head) head.textContent = '添加明细';
+            if (commit) commit.textContent = '添加';
+            if (cancel) cancel.hidden = true;
+        }
+
+        function fillDetailFormFromRow(r) {
+            const setv = (id, v) => {
+                const el = document.getElementById(id);
+                if (el) el.value = v;
+            };
+            setv('detail-name', r.name);
+            setv('detail-code', r.code);
+            setv('detail-mktcap', Number.isFinite(r.mktcap) ? String(r.mktcap) : '');
+            setv('detail-weight', r.weightStr || '');
+            setv('detail-shares', Number.isFinite(r.shares) ? String(r.shares) : '');
+            setv('detail-avail', Number.isFinite(r.avail) ? String(r.avail) : '');
+            setv('detail-cost', Number.isFinite(r.cost) ? String(r.cost) : '');
+            setv('detail-price', Number.isFinite(r.price) ? String(r.price) : '');
+        }
+
+        function enterEditDetail(idx) {
+            if (!Number.isInteger(idx) || idx < 0 || idx >= originRows.length) return;
+            editingDetailIdx = idx;
+            fillDetailFormFromRow(originRows[idx]);
+            const head = document.getElementById('detail-crud-head');
+            const commit = document.getElementById('btn-detail-commit');
+            const cancel = document.getElementById('btn-detail-cancel-edit');
+            if (head) head.textContent = '编辑明细（序号 ' + (idx + 1) + '）';
+            if (commit) commit.textContent = '保存修改';
+            if (cancel) cancel.hidden = false;
+            document.getElementById('detail-crud-box')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function commitDetailForm() {
+            const raw = readDetailFormRaw();
+            if (!String(raw['名称'] || '').trim() && !String(raw['编号'] || '').trim()) {
+                showParseError('请至少填写名称或编号。');
+                return;
+            }
+            showParseError('');
+            if (editingDetailIdx !== null) {
+                const i = editingDetailIdx;
+                if (!Number.isInteger(i) || i < 0 || i >= originRows.length) {
+                    clearDetailForm();
+                    return;
+                }
+                originRows[i] = normalizeRow(raw, i);
+                clearDetailForm();
+            } else {
+                const idx = originRows.length;
+                originRows.push(normalizeRow(raw, idx));
+                clearDetailForm();
+            }
+            persistHoldingsAndRefresh();
+        }
+
+        function deleteDetailAt(idx) {
+            if (!Number.isInteger(idx) || idx < 0 || idx >= originRows.length) return;
+            originRows.splice(idx, 1);
+            remapRowAssignmentsAfterDelete(idx);
+            reindexOriginRowsInPlace();
+            if (editingDetailIdx !== null) {
+                if (editingDetailIdx === idx) clearDetailForm();
+                else if (editingDetailIdx > idx) editingDetailIdx -= 1;
+            }
+            if (!originRows.length) {
+                clearDataView();
+                clearHoldingsLocal();
+                return;
+            }
+            persistHoldingsAndRefresh();
         }
 
         function validateRowAssignments() {
@@ -1105,26 +1880,19 @@
         }
 
         function renderGroupSummaryTable() {
+            const headRow = document.getElementById('groupSummaryHeadRow');
+            if (!headRow || !headRow.children.length) applyGroupTableLayout();
+
             const tbody = document.getElementById('groupSummaryBody');
             const wrap = document.getElementById('group-summary-wrap');
             const ph = document.getElementById('group-summary-placeholder');
-
-            document.querySelectorAll('#groupSummaryTable thead th[data-sort]').forEach((th) => {
-                th.classList.remove('sort-asc', 'sort-desc');
-                if (
-                    groupSummarySortKey &&
-                    typeof th.dataset.sort === 'string' &&
-                    th.dataset.sort === groupSummarySortKey
-                ) {
-                    th.classList.add(`sort-${groupSummarySortDir}`);
-                }
-            });
 
             if (!tbody || !wrap || !ph) return;
             if (!originRows.length) {
                 wrap.hidden = true;
                 ph.hidden = false;
                 ph.textContent = '暂无持仓数据。';
+                updateGroupSortHeaderClasses();
                 return;
             }
             wrap.hidden = false;
@@ -1241,17 +2009,24 @@
                     tdOp.textContent = '—';
                 }
 
-                tr.appendChild(tdName);
-                tr.appendChild(tdN);
-                tr.appendChild(tdBasis);
-                tr.appendChild(tdMkt);
-                tr.appendChild(tdW);
-                tr.appendChild(tdFp);
-                tr.appendChild(tdPct);
-                tr.appendChild(tdOp);
+                const cells = {
+                    label: tdName,
+                    count: tdN,
+                    basis: tdBasis,
+                    mktcap: tdMkt,
+                    weight: tdW,
+                    profit: tdFp,
+                    pnlPct: tdPct,
+                    actions: tdOp
+                };
+                for (const colId of groupLayout.order) {
+                    const c = cells[colId];
+                    if (c) tr.appendChild(c);
+                }
 
                 tbody.appendChild(tr);
             });
+            updateGroupSortHeaderClasses();
         }
 
         function refreshGroupingPanels() {
@@ -1481,6 +2256,9 @@
                     elWorstDet.hidden = false;
                 }
             }
+
+            const expBtn = el('btn-export-holdings');
+            if (expBtn) expBtn.disabled = count === 0;
         }
 
         function setSourceFile(name) {
@@ -1513,19 +2291,6 @@
             }
         }
 
-        function bindSortHeaders() {
-            document.querySelectorAll('#etfHoldingsTable thead th[data-sort]').forEach((th) => {
-                if (th.dataset.bound === '1') return;
-                th.dataset.bound = '1';
-                th.addEventListener('click', () => sortTable(th.dataset.sort));
-            });
-            document.querySelectorAll('#groupSummaryTable thead th[data-sort]').forEach((th) => {
-                if (th.dataset.bound === '1') return;
-                th.dataset.bound = '1';
-                th.addEventListener('click', () => sortGroupSummaryBy(th.dataset.sort));
-            });
-        }
-
         function clearDataView() {
             originRows = [];
             renderRows = [];
@@ -1534,10 +2299,13 @@
             groupSummarySortKey = null;
             groupSummarySortDir = 'asc';
             rowAssignments = {};
+            editingDetailIdx = null;
+            clearDetailForm();
             const body = document.getElementById('etfHoldingsBody');
             if (body) body.innerHTML = '';
             updateSummary([]);
             setSourceFile('');
+            setDetailEditorVisibility(false);
             const tableWrap = document.getElementById('table-wrap');
             const placeholder = document.getElementById('table-placeholder');
             if (tableWrap) tableWrap.hidden = true;
@@ -1548,6 +2316,15 @@
         /** @param {any[]} data @param {string} [fileName] */
         function applyPayload(data, fileName) {
             if (!Array.isArray(data)) throw new Error('JSON 根节点须为对象数组');
+            if (!data.length) {
+                clearDataView();
+                clearHoldingsLocal();
+                if (fileName) setSourceFile(fileName);
+                showParseError('');
+                return;
+            }
+            editingDetailIdx = null;
+            clearDetailForm();
             originRows = data.map((raw, idx) => normalizeRow(raw, idx));
             renderRows = [...originRows];
             currentSortKey = 'index';
@@ -1567,6 +2344,8 @@
             const placeholder = document.getElementById('table-placeholder');
             if (tableWrap) tableWrap.hidden = false;
             if (placeholder) placeholder.hidden = true;
+            saveHoldingsToLocal();
+            setDetailEditorVisibility(true);
             renderTable();
             refreshGroupingPanels();
             writeClassifyStored();
@@ -1596,6 +2375,8 @@
         }
 
         function renderTable() {
+            const headRow = document.getElementById('etfHoldingsHeadRow');
+            if (!headRow || !headRow.children.length) applyHoldingsTableLayout();
             const body = document.getElementById('etfHoldingsBody');
             if (!body) return;
             body.innerHTML = '';
@@ -1610,28 +2391,11 @@
                           : 'mono';
                 const gid = rowAssignments[String(r._idx)] || '';
                 const pickCell = buildGroupPickerHtml(gid, r._idx);
-                tr.innerHTML = `
-                    <td class="mono">${r._idx + 1}</td>
-                    <td>${escapeHtml(r.name)}</td>
-                    <td><strong class="mono">${escapeHtml(r.code)}</strong></td>
-                    <td class="mono">${fmtMoney(r.mktcap)}</td>
-                    <td class="mono"><strong>${escapeHtml(r.weightStr)}</strong></td>
-                    <td class="mono">${Number.isFinite(r.shares) ? String(r.shares) : '—'}</td>
-                    <td class="mono">${Number.isFinite(r.avail) ? String(r.avail) : '—'}</td>
-                    <td class="mono">${fmtPrice(r.cost)}</td>
-                    <td class="mono">${fmtPrice(r.price)}</td>
-                    <td class="${pnlClass}">${fmtPnl(r.pnlPct)}</td>
-                    <td class="group-cell-td">${pickCell}</td>
-                `;
+                tr.innerHTML = buildHoldingRowCellsHtml(r, pnlClass, pickCell);
                 body.appendChild(tr);
             });
 
-            document.querySelectorAll('#etfHoldingsTable thead th').forEach((th) => {
-                th.classList.remove('sort-asc', 'sort-desc');
-                if (th.dataset.sort === currentSortKey) {
-                    th.classList.add(`sort-${currentSortDir}`);
-                }
-            });
+            updateHoldingsSortHeaderClasses();
         }
 
         function escapeHtml(s) {
@@ -1756,9 +2520,22 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadTableLayoutsFromStorage();
+            applyHoldingsTableLayout();
+            applyGroupTableLayout();
+            wireTableColumnsInteractionsOnce();
+
             loadClassifyFromStorage();
 
-            bindSortHeaders();
+            const saved = tryLoadHoldingsFromLocal();
+            if (saved && saved.length) {
+                try {
+                    applyPayload(saved, '浏览器本地');
+                } catch {
+                    clearHoldingsLocal();
+                }
+            }
+
             wireClassifyPanelOnce();
 
             document.getElementById('btn-group-add')?.addEventListener('click', () => addGroupFromInlineInput());
@@ -1770,6 +2547,21 @@
 
             const holdingsBody = document.getElementById('etfHoldingsBody');
             if (holdingsBody) {
+                holdingsBody.addEventListener('click', (e) => {
+                    const be = e.target.closest('[data-detail-edit]');
+                    if (be) {
+                        const idx = parseInt(be.getAttribute('data-detail-edit') || '-1', 10);
+                        enterEditDetail(idx);
+                        return;
+                    }
+                    const bd = e.target.closest('[data-detail-del]');
+                    if (bd) {
+                        const idx = parseInt(bd.getAttribute('data-detail-del') || '-1', 10);
+                        if (!Number.isInteger(idx) || idx < 0) return;
+                        if (!confirm('确定删除该条明细？')) return;
+                        deleteDetailAt(idx);
+                    }
+                });
                 holdingsBody.addEventListener('change', (e) => {
                     const t = e.target;
                     if (!t || !t.classList.contains('group-pick')) return;
@@ -1793,38 +2585,52 @@
             const dl = document.getElementById('btn-download-sample');
             if (dl) dl.addEventListener('click', () => downloadSampleEtfJson());
 
-            if (!input || !zone) return;
+            document.getElementById('btn-export-holdings')?.addEventListener('click', () => downloadHoldingsJson());
+            document.getElementById('btn-detail-commit')?.addEventListener('click', () => commitDetailForm());
+            document.getElementById('btn-detail-cancel-edit')?.addEventListener('click', () => clearDetailForm());
 
-            input.addEventListener('change', () => {
-                const file = input.files && input.files[0];
-                if (!file) return;
-                readFileAsJson(file);
-                input.value = '';
-            });
-
-            zone.addEventListener('dragover', (ev) => {
-                ev.preventDefault();
-                zone.classList.add('dragover');
-            });
-            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-            zone.addEventListener('drop', (ev) => {
-                ev.preventDefault();
-                zone.classList.remove('dragover');
-                const f =
-                    ev.dataTransfer &&
-                    ev.dataTransfer.files &&
-                    ev.dataTransfer.files[0];
-                if (!f) return;
-                const okType =
-                    f.type === 'application/json' ||
-                    /\.json$/i.test(f.name || '');
-                if (!okType) {
-                    showParseError('请拖放 .json 文件。');
-                    return;
+            document.getElementById('detail-crud-box')?.addEventListener('keydown', (ev) => {
+                if (ev.key !== 'Enter' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+                const t = ev.target;
+                if (t && t.tagName === 'TEXTAREA') return;
+                if (t && t.tagName === 'INPUT' && t.classList.contains('group-name-edit')) {
+                    ev.preventDefault();
+                    commitDetailForm();
                 }
-                showParseError('');
-                readFileAsJson(f);
             });
+
+            if (input && zone) {
+                input.addEventListener('change', () => {
+                    const file = input.files && input.files[0];
+                    if (!file) return;
+                    readFileAsJson(file);
+                    input.value = '';
+                });
+
+                zone.addEventListener('dragover', (ev) => {
+                    ev.preventDefault();
+                    zone.classList.add('dragover');
+                });
+                zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+                zone.addEventListener('drop', (ev) => {
+                    ev.preventDefault();
+                    zone.classList.remove('dragover');
+                    const f =
+                        ev.dataTransfer &&
+                        ev.dataTransfer.files &&
+                        ev.dataTransfer.files[0];
+                    if (!f) return;
+                    const okType =
+                        f.type === 'application/json' ||
+                        /\.json$/i.test(f.name || '');
+                    if (!okType) {
+                        showParseError('请拖放 .json 文件。');
+                        return;
+                    }
+                    showParseError('');
+                    readFileAsJson(f);
+                });
+            }
         });
     </script>
 </body>
