@@ -582,6 +582,8 @@
             font-size: 0.62rem;
             letter-spacing: -0.08em;
             user-select: none;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
             flex-shrink: 0;
             line-height: 1;
             padding: 3px 4px;
@@ -594,6 +596,11 @@
         }
         .col-drag-handle:active {
             cursor: grabbing;
+        }
+        .col-drag-handle--dragging {
+            cursor: grabbing;
+            color: var(--gold);
+            background: rgba(201, 168, 76, 0.12);
         }
         .col-label {
             flex: 1;
@@ -1152,6 +1159,9 @@
         /** @type {{ which: 'holdings' | 'group', colId: string, startX: number, startW: number } | null} */
         let tableColResizeActive = null;
         let lastTableColDragAt = 0;
+        const COL_REORDER_TOUCH_SLOP_PX = 12;
+        /** @type {{ which: 'holdings' | 'group', draggedId: string, touchId: number, sx: number, sy: number, active: boolean, handleEl: Element } | null} */
+        let tableColTouchReorder = null;
 
         function newGroupId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -1301,7 +1311,7 @@
                 const drag = document.createElement('span');
                 drag.className = 'col-drag-handle';
                 drag.draggable = true;
-                drag.setAttribute('aria-label', '拖拽调整列顺序');
+                drag.setAttribute('aria-label', '拖拽或在触屏按住滑动以调整列顺序');
                 drag.textContent = '⋮⋮';
                 inner.appendChild(drag);
                 const lab = document.createElement('span');
@@ -1346,7 +1356,7 @@
                 const drag = document.createElement('span');
                 drag.className = 'col-drag-handle';
                 drag.draggable = true;
-                drag.setAttribute('aria-label', '拖拽调整列顺序');
+                drag.setAttribute('aria-label', '拖拽或在触屏按住滑动以调整列顺序');
                 drag.textContent = '⋮⋮';
                 inner.appendChild(drag);
                 const lab = document.createElement('span');
@@ -1408,6 +1418,83 @@
             writeTableLayoutsToStorage();
             applyGroupTableLayout();
             renderGroupSummaryTable();
+        }
+
+        function tableColTouchGet(ev, id) {
+            for (let i = 0; i < ev.touches.length; i++) {
+                if (ev.touches[i].identifier === id) return ev.touches[i];
+            }
+            return null;
+        }
+
+        function tableColTouchFinish(ev) {
+            const st = tableColTouchReorder;
+            if (!st) return;
+            const ended = [...ev.changedTouches].some((t) => t.identifier === st.touchId);
+            if (!ended) return;
+            const ct = [...ev.changedTouches].find((t) => t.identifier === st.touchId);
+            try {
+                if (st.handleEl) st.handleEl.classList.remove('col-drag-handle--dragging');
+                if (st.active && ct) {
+                    const el = document.elementFromPoint(ct.clientX, ct.clientY);
+                    const dropTh = el && el.closest('th[data-col]');
+                    const table = dropTh && dropTh.closest('table');
+                    const ok =
+                        st.which === 'holdings'
+                            ? table && table.id === 'etfHoldingsTable'
+                            : table && table.id === 'groupSummaryTable';
+                    const dropId = ok && dropTh.dataset.col;
+                    if (dropId && dropId !== st.draggedId) {
+                        if (st.which === 'holdings') reorderHoldingsColumn(st.draggedId, dropId);
+                        else reorderGroupColumn(st.draggedId, dropId);
+                    }
+                }
+            } finally {
+                tableColTouchReorder = null;
+            }
+        }
+
+        function tableColTouchMove(ev) {
+            const st = tableColTouchReorder;
+            if (!st) return;
+            const t = tableColTouchGet(ev, st.touchId);
+            if (!t) return;
+            if (!st.active) {
+                const dx = t.clientX - st.sx;
+                const dy = t.clientY - st.sy;
+                if (dx * dx + dy * dy >= COL_REORDER_TOUCH_SLOP_PX * COL_REORDER_TOUCH_SLOP_PX) {
+                    st.active = true;
+                    st.handleEl.classList.add('col-drag-handle--dragging');
+                }
+            }
+            if (!st.active) return;
+            ev.preventDefault();
+        }
+
+        function bindColReorderTouchStart(thead, which) {
+            thead.addEventListener(
+                'touchstart',
+                (e) => {
+                    if (tableColTouchReorder) return;
+                    const h = e.target.closest('.col-drag-handle');
+                    if (!h) return;
+                    const th = h.closest('th');
+                    const id = th && th.dataset.col;
+                    if (!id) return;
+                    const t0 = e.touches[0];
+                    if (!t0) return;
+                    tableColTouchReorder = {
+                        which,
+                        draggedId: id,
+                        touchId: t0.identifier,
+                        sx: t0.clientX,
+                        sy: t0.clientY,
+                        active: false,
+                        handleEl: h,
+                    };
+                },
+                { passive: true }
+            );
         }
 
         function buildHoldingRowCellsHtml(r, pnlClass, pickCell) {
@@ -1479,6 +1566,8 @@
                     if (!dragged || !dropId) return;
                     reorderHoldingsColumn(dragged, dropId);
                 });
+                const etfThead = etf.querySelector('thead');
+                if (etfThead) bindColReorderTouchStart(etfThead, 'holdings');
             }
             if (grp && grp.dataset.colWired !== '1') {
                 grp.dataset.colWired = '1';
@@ -1513,6 +1602,14 @@
                     if (!dragged || !dropId) return;
                     reorderGroupColumn(dragged, dropId);
                 });
+                const grpThead = grp.querySelector('thead');
+                if (grpThead) bindColReorderTouchStart(grpThead, 'group');
+            }
+            if (document.documentElement.dataset.colReorderTouchWired !== '1') {
+                document.documentElement.dataset.colReorderTouchWired = '1';
+                document.addEventListener('touchmove', tableColTouchMove, { passive: false });
+                document.addEventListener('touchend', tableColTouchFinish, { passive: true });
+                document.addEventListener('touchcancel', tableColTouchFinish, { passive: true });
             }
             if (document.documentElement.dataset.tableResizeWired !== '1') {
                 document.documentElement.dataset.tableResizeWired = '1';
