@@ -835,7 +835,7 @@
     <main class="container">
         <header class="page-hero">
             <h1>持仓清单 · etf.json</h1>
-            <p class="hero-sub">在下方<strong>明细表</strong>区域拖放或选择 <code style="font-family:var(--font-mono);font-size:0.85em;">etf.json</code>；解析在浏览器本地完成，不上传服务器。支持<strong>添加、编辑、删除</strong>明细，变更写入浏览器本地存储。表头可排序；盈亏按成本与现价粗略估算。</p>
+            <p class="hero-sub">可<strong>不上传 JSON</strong>，直接在下方「添加明细」逐条录入。亦可拖放或选择 <code style="font-family:var(--font-mono);font-size:0.85em;">etf.json</code> 导入（解析在浏览器本地，不上传服务器）。支持<strong>添加、编辑、删除</strong>明细，变更写入浏览器本地存储。表头可排序；盈亏按成本与现价粗略估算。</p>
         </header>
 
         <div class="disclaimer" role="note">
@@ -898,31 +898,9 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-table" class="panel-title">明细表</h2>
-                <span class="panel-sub">表头左侧 <strong>⋮⋮</strong> 可拖拽调列序，右缘可拖调列宽（配置存浏览器）；点击文字排序。下方载入区用于<strong>导入 / 导出</strong>与案例下载；编辑后的数据保存在本机浏览器</span>
+                <span class="panel-sub">表头左侧 <strong>⋮⋮</strong> 可拖拽调列序，右缘可拖调列宽（配置存浏览器）；点击文字排序。<strong>添加明细</strong>可手工录入整表，无需先导入 JSON；载入区用于可选的<strong>导入 / 导出</strong>与案例下载；编辑后的数据保存在本机浏览器</span>
             </div>
-            <div class="upload-card detail-upload-card">
-                <input type="file" id="etf-file" class="upload-input" accept=".json,application/json" />
-                <label for="etf-file" class="upload-zone" id="upload-zone">
-                    <span class="upload-title">ETF 持仓 JSON</span>
-                    <span class="upload-cta">点击选择文件</span>
-                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组，字段与导出一致：名称、编号、市值、仓位、持仓、可用持仓、成本、现价；导入将<strong>替换</strong>当前明细并写入本地存储</span>
-                </label>
-                <p class="upload-hint">也可将 <span class="mono">etf.json</span> 拖入上方区域</p>
-                <div class="upload-actions">
-                    <div class="upload-actions-row">
-                        <button type="button" class="sample-download-btn" id="btn-download-sample" aria-label="下载案例 JSON 文件 etf-sample.json">
-                            下载案例 <span class="fname">etf-sample.json</span>
-                        </button>
-                        <button type="button" class="sample-download-btn" id="btn-export-holdings" aria-label="导出当前持仓为 etf.json" disabled>
-                            导出当前 <span class="fname">etf.json</span>
-                        </button>
-                    </div>
-                    <span class="upload-actions-hint">少量示例行与真实导出格式一致；导出文件可供备份或在外部编辑后再拖回本页载入。也可使用 AI 将持仓截图转换为 JSON。</span>
-                </div>
-                <p class="file-meta" id="file-meta" hidden>当前数据：<strong id="file-name"></strong></p>
-            </div>
-            <div id="parse-error" class="state-msg error" style="padding-top:8px;margin-bottom:4px;" hidden></div>
-            <div class="detail-crud-box" id="detail-crud-box" hidden>
+            <div class="detail-crud-box" id="detail-crud-box">
                 <div class="detail-crud-head" id="detail-crud-head">添加明细</div>
                 <div class="detail-crud-grid">
                     <div class="detail-field">
@@ -963,7 +941,29 @@
                     <button type="button" class="btn-classify btn-classify--ghost" id="btn-detail-cancel-edit" hidden>取消编辑</button>
                 </div>
             </div>
-            <p id="table-placeholder" class="state-msg">上传 JSON、导入文件或加载浏览器已存数据后将在此显示明细表。</p>
+            <div class="upload-card detail-upload-card">
+                <input type="file" id="etf-file" class="upload-input" accept=".json,application/json" />
+                <label for="etf-file" class="upload-zone" id="upload-zone">
+                    <span class="upload-title">ETF 持仓 JSON（可选）</span>
+                    <span class="upload-cta">点击选择文件</span>
+                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组，字段与导出一致：名称、编号、市值、仓位、持仓、可用持仓、成本、现价；导入将<strong>替换</strong>当前明细并写入本地存储</span>
+                </label>
+                <p class="upload-hint">也可将 <span class="mono">etf.json</span> 拖入上方区域</p>
+                <div class="upload-actions">
+                    <div class="upload-actions-row">
+                        <button type="button" class="sample-download-btn" id="btn-download-sample" aria-label="下载案例 JSON 文件 etf-sample.json">
+                            下载案例 <span class="fname">etf-sample.json</span>
+                        </button>
+                        <button type="button" class="sample-download-btn" id="btn-export-holdings" aria-label="导出当前持仓为 etf.json" disabled>
+                            导出当前 <span class="fname">etf.json</span>
+                        </button>
+                    </div>
+                    <span class="upload-actions-hint">少量示例行与真实导出格式一致；导出文件可供备份或在外部编辑后再拖回本页载入。也可使用 AI 将持仓截图转换为 JSON。</span>
+                </div>
+                <p class="file-meta" id="file-meta" hidden>当前数据：<strong id="file-name"></strong></p>
+            </div>
+            <div id="parse-error" class="state-msg error" style="padding-top:8px;margin-bottom:4px;" hidden></div>
+            <p id="table-placeholder" class="state-msg">先在上方「添加明细」填写并点击添加，或于载入区导入 JSON / 使用浏览器已存数据。有数据后在此显示表格。</p>
             <div class="table-wrap" id="table-wrap" hidden>
                 <table id="etfHoldingsTable" class="panel-table panel-table--col-custom">
                     <colgroup id="etfHoldingsColgroup"></colgroup>
@@ -1719,9 +1719,18 @@
             }
         }
 
-        function setDetailEditorVisibility(hasRows) {
-            const box = document.getElementById('detail-crud-box');
-            if (box) box.hidden = !hasRows;
+        function syncHoldingsTableShell() {
+            const n = originRows.length;
+            const tableWrap = document.getElementById('table-wrap');
+            const placeholder = document.getElementById('table-placeholder');
+            if (tableWrap) tableWrap.hidden = n === 0;
+            if (placeholder) {
+                placeholder.hidden = n > 0;
+                if (n === 0) {
+                    placeholder.textContent =
+                        '暂无明细。可在上方「添加明细」逐条填写（无需 JSON），或在载入区导入 JSON / 使用浏览器已存数据。有数据后在此显示表格。';
+                }
+            }
         }
 
         function downloadHoldingsJson() {
@@ -1755,6 +1764,7 @@
             validateRowAssignments();
             saveHoldingsToLocal();
             updateSummary(originRows);
+            syncHoldingsTableShell();
             refreshRenderOrder();
             refreshGroupingPanels();
             writeClassifyStored();
@@ -2402,11 +2412,7 @@
             if (body) body.innerHTML = '';
             updateSummary([]);
             setSourceFile('');
-            setDetailEditorVisibility(false);
-            const tableWrap = document.getElementById('table-wrap');
-            const placeholder = document.getElementById('table-placeholder');
-            if (tableWrap) tableWrap.hidden = true;
-            if (placeholder) placeholder.hidden = false;
+            syncHoldingsTableShell();
             refreshGroupingPanels();
         }
 
@@ -2437,12 +2443,8 @@
             if (fileName) setSourceFile(fileName);
             showParseError('');
 
-            const tableWrap = document.getElementById('table-wrap');
-            const placeholder = document.getElementById('table-placeholder');
-            if (tableWrap) tableWrap.hidden = false;
-            if (placeholder) placeholder.hidden = true;
+            syncHoldingsTableShell();
             saveHoldingsToLocal();
-            setDetailEditorVisibility(true);
             renderTable();
             refreshGroupingPanels();
             writeClassifyStored();
