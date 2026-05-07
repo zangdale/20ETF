@@ -403,6 +403,33 @@
         .group-add-box .btn-classify {
             flex: 0 0 auto;
         }
+        .holdings-search-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+        }
+        .holdings-search-row label {
+            flex: 0 0 auto;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .holdings-search-row .holdings-search-input {
+            flex: 1 1 0;
+            min-width: 0;
+            width: auto;
+            max-width: none;
+        }
+        .holdings-filter-msg {
+            margin-bottom: 10px;
+        }
         #groupSummaryTable .manage-action-th,
         #groupSummaryTable tbody td.manage-action-cell {
             width: 96px;
@@ -506,6 +533,8 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: var(--radius-2xl);
+            width: 100%;
+            box-sizing: border-box;
         }
         .detail-crud-head {
             font-size: 0.78rem;
@@ -515,12 +544,19 @@
             text-transform: uppercase;
             margin-bottom: 12px;
         }
-        .detail-crud-grid {
+        .detail-crud-main {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
             gap: 10px 12px;
             align-items: end;
-            margin-bottom: 12px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .detail-crud-grid {
+            display: contents;
+        }
+        .detail-field {
+            min-width: 0;
         }
         .detail-field label {
             display: block;
@@ -535,9 +571,13 @@
         }
         .detail-crud-actions {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 10px;
             align-items: center;
+            flex-shrink: 0;
+        }
+        .detail-crud-actions .btn-classify {
+            white-space: nowrap;
         }
         .detail-crud-actions .btn-classify--ghost {
             border-style: dashed;
@@ -545,6 +585,22 @@
         }
         .detail-crud-actions .btn-classify--ghost:hover {
             color: var(--gold);
+        }
+        @media (max-width: 960px) {
+            .detail-crud-main {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            .detail-crud-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                width: 100%;
+            }
+            .detail-crud-actions {
+                justify-content: flex-start;
+            }
         }
         #etfHoldingsTable th.detail-action-th,
         #etfHoldingsTable td.detail-action-cell {
@@ -846,7 +902,7 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-summary" class="panel-title">汇总</h2>
-                <span class="panel-sub">条目数、市值合计；合计盈亏按「市值 − 成本×持仓」（仅成本基数 &gt; 0）；盈亏家数与明细「盈亏%」列一致；极值卡片取单条浮盈/浮亏最大者（仅统计该口径下盈或亏的条目）</span>
+                <span class="panel-sub">条目数、市值合计；单条市值＝持仓×现价，仓位＝该条市值÷总市值；合计盈亏按「市值 − 成本×持仓」（仅成本基数 &gt; 0）；盈亏家数与明细「盈亏%」列一致；极值卡片取单条浮盈/浮亏最大者（仅统计该口径下盈或亏的条目）</span>
             </div>
             <div class="metrics-grid">
                 <div class="stat-card stat-card--accent">
@@ -898,10 +954,11 @@
             <div class="panel-head">
                 <span class="accent-line" aria-hidden="true"></span>
                 <h2 id="sec-table" class="panel-title">明细表</h2>
-                <span class="panel-sub">表头左侧 <strong>⋮⋮</strong> 可拖拽调列序，右缘可拖调列宽（配置存浏览器）；点击文字排序。<strong>添加明细</strong>可手工录入整表，无需先导入 JSON；载入区用于可选的<strong>导入 / 导出</strong>与案例下载；编辑后的数据保存在本机浏览器</span>
+                <span class="panel-sub">表头左侧 <strong>⋮⋮</strong> 可拖拽调列序，右缘可拖调列宽（配置存浏览器）；点击文字排序。表格上方可按<strong>名称、编号</strong>搜索筛选。<strong>添加明细</strong>填写持仓与现价等即可，市值与仓位由页面自动计算；载入区用于可选的<strong>导入 / 导出</strong>与案例下载；编辑后的数据保存在本机浏览器</span>
             </div>
             <div class="detail-crud-box" id="detail-crud-box">
                 <div class="detail-crud-head" id="detail-crud-head">添加明细</div>
+                <div class="detail-crud-main">
                 <div class="detail-crud-grid">
                     <div class="detail-field">
                         <label for="detail-name">名称</label>
@@ -912,20 +969,8 @@
                         <input type="text" id="detail-code" class="group-name-edit mono" maxlength="32" autocomplete="off" />
                     </div>
                     <div class="detail-field">
-                        <label for="detail-mktcap">市值</label>
-                        <input type="text" id="detail-mktcap" class="group-name-edit mono" inputmode="decimal" placeholder="元" autocomplete="off" />
-                    </div>
-                    <div class="detail-field">
-                        <label for="detail-weight">仓位</label>
-                        <input type="text" id="detail-weight" class="group-name-edit mono" placeholder="如 1.2%" autocomplete="off" />
-                    </div>
-                    <div class="detail-field">
                         <label for="detail-shares">持仓</label>
                         <input type="text" id="detail-shares" class="group-name-edit mono" inputmode="decimal" autocomplete="off" />
-                    </div>
-                    <div class="detail-field">
-                        <label for="detail-avail">可用持仓</label>
-                        <input type="text" id="detail-avail" class="group-name-edit mono" inputmode="decimal" autocomplete="off" />
                     </div>
                     <div class="detail-field">
                         <label for="detail-cost">成本</label>
@@ -940,13 +985,14 @@
                     <button type="button" class="btn-classify btn-classify--primary" id="btn-detail-commit">添加</button>
                     <button type="button" class="btn-classify btn-classify--ghost" id="btn-detail-cancel-edit" hidden>取消编辑</button>
                 </div>
+                </div>
             </div>
             <div class="upload-card detail-upload-card">
                 <input type="file" id="etf-file" class="upload-input" accept=".json,application/json" />
                 <label for="etf-file" class="upload-zone" id="upload-zone">
                     <span class="upload-title">ETF 持仓 JSON（可选）</span>
                     <span class="upload-cta">点击选择文件</span>
-                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组，字段与导出一致：名称、编号、市值、仓位、持仓、可用持仓、成本、现价；导入将<strong>替换</strong>当前明细并写入本地存储</span>
+                    <span class="upload-hint" style="margin-top:0;color:var(--text-secondary);">须为对象数组：名称、编号、持仓、成本、现价（必填口径）；市值＝持仓×现价、仓位＝市值占比由页面重算；导出仍含市值与仓位便于核对；旧 JSON 中的市值、仓位若与计算不一致将以计算为准；仅有「可用持仓」且无「持仓」时仍可载入；导入将<strong>替换</strong>当前明细并写入本地存储</span>
                 </label>
                 <p class="upload-hint">也可将 <span class="mono">etf.json</span> 拖入上方区域</p>
                 <div class="upload-actions">
@@ -965,6 +1011,19 @@
             <div id="parse-error" class="state-msg error" style="padding-top:8px;margin-bottom:4px;" hidden></div>
             <p id="table-placeholder" class="state-msg">先在上方「添加明细」填写并点击添加，或于载入区导入 JSON / 使用浏览器已存数据。有数据后在此显示表格。</p>
             <div class="table-wrap" id="table-wrap" hidden>
+                <div class="holdings-search-row">
+                    <label for="holdings-search">搜索</label>
+                    <input
+                        type="search"
+                        id="holdings-search"
+                        class="group-name-edit holdings-search-input"
+                        placeholder="按名称或编号筛选…"
+                        autocomplete="off"
+                        enterkeyhint="search"
+                        aria-label="按名称或编号搜索明细"
+                    />
+                </div>
+                <p id="holdings-filter-msg" class="state-msg holdings-filter-msg" hidden>没有匹配的明细，请调整关键词。</p>
                 <table id="etfHoldingsTable" class="panel-table panel-table--col-custom">
                     <colgroup id="etfHoldingsColgroup"></colgroup>
                     <thead>
@@ -1007,13 +1066,13 @@
     </main>
 
     <script>
-/** 案例数据：字段与真实导出一致，便于试页面或作为模板 */
+/** 案例数据：仅需持仓与现价等；载入后市值、仓位与导出格式一致（由页面计算） */
         const SAMPLE_ETF_ROWS = [
-            {"名称":"工业有色","市值":1380.80,"编号":"560860","仓位":"0.5%","持仓":800,"可用持仓":800,"成本":0.206,"现价":1.726},
-            {"名称":"黄金股PA","市值":344.40,"编号":"159322","仓位":"0.1%","持仓":200,"可用持仓":200,"成本":0.217,"现价":1.722},
-            {"名称":"豆粕ETF","市值":864.80,"编号":"159985","仓位":"0.3%","持仓":400,"可用持仓":400,"成本":1.525,"现价":2.162},
-            {"名称":"纳斯达克","市值":6442.20,"编号":"513300","仓位":"2.5%","持仓":2700,"可用持仓":2700,"成本":2.335,"现价":2.386},
-            {"名称":"黄金ETF","市值":43551.00,"编号":"518880","仓位":"16.6%","持仓":4500,"可用持仓":4500,"成本":9.770,"现价":9.678}
+            {"名称":"工业有色","编号":"560860","持仓":800,"成本":0.206,"现价":1.726},
+            {"名称":"黄金股PA","编号":"159322","持仓":200,"成本":0.217,"现价":1.722},
+            {"名称":"豆粕ETF","编号":"159985","持仓":400,"成本":1.525,"现价":2.162},
+            {"名称":"纳斯达克","编号":"513300","持仓":2700,"成本":2.335,"现价":2.386},
+            {"名称":"黄金ETF","编号":"518880","持仓":4500,"成本":9.770,"现价":9.678}
         ];
 
         function downloadSampleEtfJson() {
@@ -1030,12 +1089,6 @@
             URL.revokeObjectURL(url);
         }
 
-        function parsePercent(str) {
-            if (typeof str !== 'string') return NaN;
-            const n = parseFloat(String(str).replace('%', '').trim());
-            return Number.isFinite(n) ? n : NaN;
-        }
-
         /** JSON 中 null/空串按缺失处理，避免 Number(null)===0 */
         function numOrNaN(v) {
             if (v === undefined || v === null || v === '') return NaN;
@@ -1047,13 +1100,11 @@
         function normalizeRow(raw, idx) {
             const name = raw['名称'] ?? '';
             const code = String(raw['编号'] ?? '');
-            const mktcap = numOrNaN(raw['市值']);
-            const weightStr = raw['仓位'] ?? '0%';
-            const shares = numOrNaN(raw['持仓']);
-            const avail = numOrNaN(raw['可用持仓']);
+            const sharesPrimary = numOrNaN(raw['持仓']);
+            const sharesFallback = numOrNaN(raw['可用持仓']);
+            const shares = Number.isFinite(sharesPrimary) ? sharesPrimary : sharesFallback;
             const cost = numOrNaN(raw['成本']);
             const price = numOrNaN(raw['现价']);
-            const weightNum = parsePercent(weightStr);
             let pnlPct = NaN;
             if (Number.isFinite(cost) && cost !== 0 && Number.isFinite(price)) {
                 pnlPct = ((price - cost) / cost) * 100;
@@ -1062,15 +1113,46 @@
                 _idx: idx,
                 name,
                 code,
-                mktcap: Number.isFinite(mktcap) ? mktcap : NaN,
-                weightStr,
-                weightNum: Number.isFinite(weightNum) ? weightNum : 0,
+                mktcap: NaN,
+                weightStr: '—',
+                weightNum: NaN,
                 shares: Number.isFinite(shares) ? shares : NaN,
-                avail: Number.isFinite(avail) ? avail : NaN,
                 cost: Number.isFinite(cost) ? cost : NaN,
                 price: Number.isFinite(price) ? price : NaN,
                 pnlPct
             };
+        }
+
+        function fmtWeightStr(weightNum) {
+            if (!Number.isFinite(weightNum)) return '—';
+            let s = (Math.round(weightNum * 100) / 100).toFixed(2);
+            if (s.endsWith('.00')) s = s.slice(0, -3);
+            else if (s.endsWith('0')) s = s.slice(0, -1);
+            return s + '%';
+        }
+
+        /** 市值＝持仓×现价；仓位＝本条市值÷列表总市值（就地修改） */
+        function recomputeHoldingsDerived(rows) {
+            for (const r of rows) {
+                let mv = NaN;
+                if (Number.isFinite(r.shares) && Number.isFinite(r.price)) {
+                    mv = r.shares * r.price;
+                }
+                r.mktcap = mv;
+            }
+            let total = 0;
+            for (const r of rows) {
+                if (Number.isFinite(r.mktcap)) total += r.mktcap;
+            }
+            for (const r of rows) {
+                if (total > 0 && Number.isFinite(r.mktcap)) {
+                    r.weightNum = (r.mktcap / total) * 100;
+                    r.weightStr = fmtWeightStr(r.weightNum);
+                } else {
+                    r.weightNum = NaN;
+                    r.weightStr = '—';
+                }
+            }
         }
 
         function fmtMoney(n) {
@@ -1091,6 +1173,7 @@
 
         let originRows = [];
         let renderRows = [];
+        let holdingsSearchQuery = '';
         let currentSortKey = 'index';
         let currentSortDir = 'asc';
 
@@ -1118,7 +1201,6 @@
             'mktcap',
             'weight',
             'shares',
-            'avail',
             'cost',
             'price',
             'pnlPct',
@@ -1132,7 +1214,6 @@
             mktcap: { sort: 'mktcap', label: '市值', thClass: 'mono', defaultWidth: 92 },
             weight: { sort: 'weight', label: '仓位', thClass: 'mono', defaultWidth: 72 },
             shares: { sort: 'shares', label: '持仓', thClass: 'mono', defaultWidth: 72 },
-            avail: { sort: 'avail', label: '可用持仓', thClass: 'mono', defaultWidth: 88 },
             cost: { sort: 'cost', label: '成本', thClass: 'mono', defaultWidth: 72 },
             price: { sort: 'price', label: '现价', thClass: 'mono', defaultWidth: 72 },
             pnlPct: { sort: 'pnlPct', label: '盈亏%', thClass: 'mono', defaultWidth: 76 },
@@ -1505,7 +1586,6 @@
             parts.mktcap = `<td class="mono">${fmtMoney(r.mktcap)}</td>`;
             parts.weight = `<td class="mono"><strong>${escapeHtml(r.weightStr)}</strong></td>`;
             parts.shares = `<td class="mono">${Number.isFinite(r.shares) ? String(r.shares) : '—'}</td>`;
-            parts.avail = `<td class="mono">${Number.isFinite(r.avail) ? String(r.avail) : '—'}</td>`;
             parts.cost = `<td class="mono">${fmtPrice(r.cost)}</td>`;
             parts.price = `<td class="mono">${fmtPrice(r.price)}</td>`;
             parts.pnlPct = `<td class="${pnlClass}">${fmtPnl(r.pnlPct)}</td>`;
@@ -1675,13 +1755,13 @@
 
         /** @param {ReturnType<typeof normalizeRow>} r */
         function rowToExportObject(r) {
+            const ws = r.weightStr && r.weightStr !== '—' ? r.weightStr : null;
             return {
                 名称: r.name,
                 编号: r.code,
                 市值: Number.isFinite(r.mktcap) ? r.mktcap : null,
-                仓位: r.weightStr || '0%',
+                仓位: ws,
                 持仓: Number.isFinite(r.shares) ? r.shares : null,
-                可用持仓: Number.isFinite(r.avail) ? r.avail : null,
                 成本: Number.isFinite(r.cost) ? r.cost : null,
                 现价: Number.isFinite(r.price) ? r.price : null
             };
@@ -1756,10 +1836,12 @@
 
         function reindexOriginRowsInPlace() {
             originRows = originRows.map((r, i) => normalizeRow(rowToExportObject(r), i));
+            recomputeHoldingsDerived(originRows);
         }
 
         /** 增删改或上传后统一持久化并刷新视图 */
         function persistHoldingsAndRefresh() {
+            recomputeHoldingsDerived(originRows);
             pruneRowAssignmentsToLength(originRows.length);
             validateRowAssignments();
             saveHoldingsToLocal();
@@ -1774,20 +1856,13 @@
         function readDetailFormRaw() {
             const name = String(document.getElementById('detail-name')?.value || '').trim();
             const code = String(document.getElementById('detail-code')?.value || '').trim();
-            const mktcap = String(document.getElementById('detail-mktcap')?.value || '').trim();
-            const weight = String(document.getElementById('detail-weight')?.value || '').trim();
             const shares = String(document.getElementById('detail-shares')?.value || '').trim();
-            const avail = String(document.getElementById('detail-avail')?.value || '').trim();
             const cost = String(document.getElementById('detail-cost')?.value || '').trim();
             const price = String(document.getElementById('detail-price')?.value || '').trim();
-            const weightStr = weight === '' ? '0%' : weight;
             return {
                 名称: name,
                 编号: code,
-                市值: mktcap === '' ? null : mktcap,
-                仓位: weightStr,
                 持仓: shares === '' ? null : shares,
-                可用持仓: avail === '' ? null : avail,
                 成本: cost === '' ? null : cost,
                 现价: price === '' ? null : price
             };
@@ -1795,7 +1870,7 @@
 
         function clearDetailForm() {
             editingDetailIdx = null;
-            ['detail-name', 'detail-code', 'detail-mktcap', 'detail-weight', 'detail-shares', 'detail-avail', 'detail-cost', 'detail-price'].forEach((id) => {
+            ['detail-name', 'detail-code', 'detail-shares', 'detail-cost', 'detail-price'].forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
@@ -1814,10 +1889,7 @@
             };
             setv('detail-name', r.name);
             setv('detail-code', r.code);
-            setv('detail-mktcap', Number.isFinite(r.mktcap) ? String(r.mktcap) : '');
-            setv('detail-weight', r.weightStr || '');
             setv('detail-shares', Number.isFinite(r.shares) ? String(r.shares) : '');
-            setv('detail-avail', Number.isFinite(r.avail) ? String(r.avail) : '');
             setv('detail-cost', Number.isFinite(r.cost) ? String(r.cost) : '');
             setv('detail-price', Number.isFinite(r.price) ? String(r.price) : '');
         }
@@ -1922,14 +1994,12 @@
             let sumMktcap = 0;
             let sumWeight = 0;
             let sumShares = 0;
-            let sumAvail = 0;
             let profitSum = 0;
             let basisSum = 0;
             for (const r of rows) {
                 if (Number.isFinite(r.mktcap)) sumMktcap += r.mktcap;
                 if (Number.isFinite(r.weightNum)) sumWeight += r.weightNum;
                 if (Number.isFinite(r.shares)) sumShares += r.shares;
-                if (Number.isFinite(r.avail)) sumAvail += r.avail;
                 const mv = rowMarketValue(r);
                 const basis = rowCostBasis(r);
                 if (Number.isFinite(mv) && Number.isFinite(basis) && basis > 0) {
@@ -1938,7 +2008,7 @@
                 }
             }
             const profitPct = basisSum > 0 ? (profitSum / basisSum) * 100 : NaN;
-            return { sumMktcap, sumWeight, sumShares, sumAvail, profitSum, profitPct, basisSum };
+            return { sumMktcap, sumWeight, sumShares, profitSum, profitPct, basisSum };
         }
 
         function classifyPnlCellClass(v) {
@@ -2401,6 +2471,9 @@
         function clearDataView() {
             originRows = [];
             renderRows = [];
+            holdingsSearchQuery = '';
+            const hs = document.getElementById('holdings-search');
+            if (hs) hs.value = '';
             currentSortKey = 'index';
             currentSortDir = 'asc';
             groupSummarySortKey = null;
@@ -2428,7 +2501,11 @@
             }
             editingDetailIdx = null;
             clearDetailForm();
+            holdingsSearchQuery = '';
+            const hs = document.getElementById('holdings-search');
+            if (hs) hs.value = '';
             originRows = data.map((raw, idx) => normalizeRow(raw, idx));
+            recomputeHoldingsDerived(originRows);
             renderRows = [...originRows];
             currentSortKey = 'index';
             currentSortDir = 'asc';
@@ -2473,6 +2550,25 @@
             reader.readAsText(file, 'UTF-8');
         }
 
+        function normalizeHoldingsSearchText(s) {
+            return String(s || '')
+                .trim()
+                .toLowerCase();
+        }
+
+        function holdingsRowMatchesSearch(r, rawQuery) {
+            const q = normalizeHoldingsSearchText(rawQuery);
+            if (!q) return true;
+            const name = normalizeHoldingsSearchText(r.name);
+            const code = normalizeHoldingsSearchText(r.code);
+            return name.includes(q) || code.includes(q);
+        }
+
+        function getHoldingsRowsForDisplay() {
+            if (!normalizeHoldingsSearchText(holdingsSearchQuery)) return renderRows;
+            return renderRows.filter((r) => holdingsRowMatchesSearch(r, holdingsSearchQuery));
+        }
+
         function renderTable() {
             const headRow = document.getElementById('etfHoldingsHeadRow');
             if (!headRow || !headRow.children.length) applyHoldingsTableLayout();
@@ -2480,7 +2576,14 @@
             if (!body) return;
             body.innerHTML = '';
 
-            renderRows.forEach((r) => {
+            const rowsToShow = getHoldingsRowsForDisplay();
+            const filterMsg = document.getElementById('holdings-filter-msg');
+            if (filterMsg) {
+                const q = normalizeHoldingsSearchText(holdingsSearchQuery);
+                filterMsg.hidden = !(q && rowsToShow.length === 0 && originRows.length > 0);
+            }
+
+            rowsToShow.forEach((r) => {
                 const tr = document.createElement('tr');
                 const pnlClass =
                     Number.isFinite(r.pnlPct) && r.pnlPct > 0
@@ -2530,8 +2633,6 @@
                     return row.weightNum;
                 case 'shares':
                     return row.shares;
-                case 'avail':
-                    return row.avail;
                 case 'cost':
                     return row.cost;
                 case 'price':
@@ -2687,6 +2788,11 @@
             document.getElementById('btn-export-holdings')?.addEventListener('click', () => downloadHoldingsJson());
             document.getElementById('btn-detail-commit')?.addEventListener('click', () => commitDetailForm());
             document.getElementById('btn-detail-cancel-edit')?.addEventListener('click', () => clearDetailForm());
+
+            document.getElementById('holdings-search')?.addEventListener('input', (ev) => {
+                holdingsSearchQuery = ev.target && 'value' in ev.target ? String(ev.target.value) : '';
+                renderTable();
+            });
 
             document.getElementById('detail-crud-box')?.addEventListener('keydown', (ev) => {
                 if (ev.key !== 'Enter' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
