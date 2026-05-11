@@ -252,3 +252,7 @@ def main() -> None:
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
     print(f"Wrote {out_path} （{len(rows)} 行，更新现价/市值 {updated_rows} 行，合计市值 {total_mv:.2f}）")
+
+
+if __name__ == "__main__":
+    main()
