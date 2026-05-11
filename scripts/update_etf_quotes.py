@@ -5,25 +5,22 @@
 
 口径：
   - 现价：push2 行情接口最新价（f2）。
-  - 市值：持仓 × 现价（元），保留两位小数。
-  - 仓位：该行市值 / 全表市值合计 × 100%，格式与现有数据一致（如 \"0.53%\"）。
+  - 某编号拉价失败时：该行「现价」「市值」保持 JSON 原样不改动；stderr 打印告警。
+  - 仓位：始终按全表各行当前市值合计重算（含未更新行沿用原市值）。
 
 用法:
   python3 scripts/update_etf_quotes.py
   python3 scripts/update_etf_quotes.py -i ~/Downloads/etf.json
   python3 scripts/update_etf_quotes.py --dry-run
-  python3 scripts/update_etf_quotes.py --strict
 
-仅标准库依赖；需联网。
-  默认：接口无报价的代码保留 JSON 内原「现价」，并在 stderr 告警。
-  --strict：禁止沿用旧「现价」，缺行情即失败。
-  --no-keep-missing：同禁用沿用旧价（与默认相反）。
+仅标准库依赖；需联网。部分失败不中断，仍写文件（除非合计市值无法计算）。
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 import time
 import urllib.error
@@ -139,6 +136,32 @@ def fmt_position_pct(mv: float, total: float) -> str:
     return f"{round(mv / total * 100.0, 2)}%"
 
 
+def parse_row_mktcap(r: dict[str, Any], hold: float) -> float | None:
+    """从行内读出用于合计的市值；失败时尝试 持仓×现价。"""
+    try:
+        v = float(r["市值"])
+        if math.isfinite(v):
+            return round_mv(v)
+    except (TypeError, ValueError, KeyError):
+        pass
+    try:
+        px = float(r["现价"])
+        h = float(hold)
+        if math.isfinite(px) and math.isfinite(h):
+            return round_mv(h * px)
+    except (TypeError, ValueError, KeyError):
+        pass
+    return None
+
+
+def log_price_miss(code: str, rows: list[dict[str, Any]]) -> None:
+    hits = [r for r in rows if str(r.get("编号", "")).strip() == code]
+    names = [str(r.get("名称", "")).strip() or "(无名称)" for r in hits]
+    n = len(hits)
+    name_part = f"名称={names[0]}" if n == 1 else f"共 {n} 行: " + " | ".join(names)
+    print(f"warn: 编号 {code} 现价获取失败，跳过更新现价/市值；{name_part}", file=sys.stderr)
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="刷新 etf.json 现价、市值、仓位")
     p.add_argument(
@@ -160,18 +183,7 @@ def main() -> None:
         action="store_true",
         help="只打印统计，不写文件",
     )
-    p.add_argument(
-        "--strict",
-        action="store_true",
-        help="禁止沿用 JSON 内原「现价」；接口缺报价则失败",
-    )
-    p.add_argument(
-        "--no-keep-missing",
-        action="store_true",
-        help="等同禁用默认的「缺价沿用旧现价」行为（缺报价即失败）",
-    )
     args = p.parse_args()
-    keep_missing = not args.no_keep_missing
 
     in_path: Path = args.input
     out_path: Path = args.output if args.output else in_path
@@ -190,47 +202,32 @@ def main() -> None:
         print(f"error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    missing_no_fallback: list[str] = []
-    kept: list[str] = []
-    for c in sorted(set(codes)):
-        if c in price_by_code:
-            continue
-        rows_c = [r for r in rows if str(r.get("编号", "")).strip() == c]
-        fallback = None
-        for r in rows_c:
-            if "现价" in r and r["现价"] is not None:
-                try:
-                    fallback = float(r["现价"])
-                except (TypeError, ValueError):
-                    pass
-                break
-        if fallback is not None and keep_missing and not args.strict:
-            price_by_code[c] = fallback
-            kept.append(c)
-        else:
-            missing_no_fallback.append(c)
+    uniq = sorted(set(codes))
+    missing = [c for c in uniq if c not in price_by_code]
 
-    if missing_no_fallback:
-        print(
-            "error: 以下编号无行情且未启用有效旧「现价」: "
-            + ", ".join(missing_no_fallback),
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    if kept:
-        print(
-            "warn: 以下编号沿用 JSON 内原「现价」（接口无报价，请核对代码是否有效）: "
-            + ", ".join(kept),
-            file=sys.stderr,
-        )
-
-    mvs: list[float] = []
+    updated_rows = 0
     for r in rows:
         code = str(r["编号"]).strip()
         hold = float(r["持仓"])
-        px = price_by_code[code]
-        mv = round_mv(hold * px)
+        if code in price_by_code:
+            px = price_by_code[code]
+            r["现价"] = round_price(px)
+            r["市值"] = round_mv(hold * px)
+            updated_rows += 1
+
+    for c in missing:
+        log_price_miss(c, rows)
+
+    mvs: list[float] = []
+    for i, r in enumerate(rows, start=1):
+        hold = float(r["持仓"])
+        mv = parse_row_mktcap(r, hold)
+        if mv is None:
+            print(
+                f"error: 第 {i} 行（编号 {r.get('编号')}）无法从「市值」或「持仓×现价」得到有效市值，无法计算仓位",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         mvs.append(mv)
 
     total_mv = sum(mvs)
@@ -239,15 +236,14 @@ def main() -> None:
         sys.exit(1)
 
     for r, mv in zip(rows, mvs, strict=True):
-        code = str(r["编号"]).strip()
-        px = price_by_code[code]
-        r["现价"] = round_price(px)
-        r["市值"] = mv
         r["仓位"] = fmt_position_pct(mv, total_mv)
 
     text = json.dumps(rows, ensure_ascii=False, indent=2) + "\n"
     if args.dry_run:
-        print(f"dry-run: {len(rows)} 行，合计市值 {total_mv:.2f}，已解析现价样例: ")
+        print(
+            f"dry-run: {len(rows)} 行，更新现价/市值 {updated_rows} 行，"
+            f"无行情跳过 {len(rows) - updated_rows} 行，合计市值 {total_mv:.2f}"
+        )
         for r in rows[:3]:
             print(f"  {r.get('名称')} {r.get('编号')}: 现价={r['现价']} 市值={r['市值']} 仓位={r['仓位']}")
         return
@@ -255,8 +251,4 @@ def main() -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
-    print(f"Wrote {out_path} （{len(rows)} 行，合计市值 {total_mv:.2f}）")
-
-
-if __name__ == "__main__":
-    main()
+    print(f"Wrote {out_path} （{len(rows)} 行，更新现价/市值 {updated_rows} 行，合计市值 {total_mv:.2f}）")
