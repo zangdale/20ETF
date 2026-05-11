@@ -1188,10 +1188,8 @@
         const CLASSIFY_LS_KEY = 'etf20:etf-classify-groups:v1';
         /** @type {{ id: string, name: string }[]} */
         let classifyGroups = [];
-        /** 行序号 _idx（字符串）→ 分组 id */
-        let rowAssignments = {};
-        /** 待从 v1（含 codes 数组）迁移 */
-        let pendingV1Migrate = null;
+        /** 基金编号（trim）→ 分组 id */
+        let codeAssignments = {};
 
         const TABLE_LAYOUT_LS_KEY = 'etf20:table-layout:v1';
         const DEFAULT_HOLDINGS_COL_ORDER = [
@@ -1249,38 +1247,30 @@
             return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
         }
 
+        /** @param {{ code: string }} r */
+        function assignmentCodeKey(r) {
+            return String(r.code || '').trim();
+        }
+
         function loadClassifyFromStorage() {
-            pendingV1Migrate = null;
             classifyGroups = [];
-            rowAssignments = {};
+            codeAssignments = {};
             try {
                 const raw = localStorage.getItem(CLASSIFY_LS_KEY);
                 if (!raw) return;
                 const o = JSON.parse(raw);
-                if (o && o.v === 2 && Array.isArray(o.groups)) {
-                    classifyGroups = o.groups.map((g) => ({
-                        id: String(g.id || newGroupId()),
-                        name: String(g.name || '分组').trim() || '分组'
-                    }));
-                    rowAssignments = {};
-                    const ra = o.rowAssignments;
-                    if (ra && typeof ra === 'object' && !Array.isArray(ra)) {
-                        Object.entries(ra).forEach(([k, v]) => {
-                            if (v != null && String(v).trim()) rowAssignments[String(k)] = String(v).trim();
-                        });
-                    }
-                    return;
-                }
-                if (Array.isArray(o.groups) && o.groups.length) {
-                    const first = o.groups[0];
-                    if (first && Array.isArray(first.codes)) {
-                        pendingV1Migrate = o.groups;
-                    } else {
-                        classifyGroups = o.groups.map((g) => ({
-                            id: String(g.id || newGroupId()),
-                            name: String(g.name || '分组').trim() || '分组'
-                        }));
-                    }
+                if (!o || o.v !== 3 || !Array.isArray(o.groups)) return;
+                classifyGroups = o.groups.map((g) => ({
+                    id: String(g.id || newGroupId()),
+                    name: String(g.name || '分组').trim() || '分组'
+                }));
+                const ca = o.codeAssignments;
+                if (ca && typeof ca === 'object' && !Array.isArray(ca)) {
+                    Object.entries(ca).forEach(([k, v]) => {
+                        const ck = String(k).trim();
+                        if (!ck || v == null || !String(v).trim()) return;
+                        codeAssignments[ck] = String(v).trim();
+                    });
                 }
             } catch {
                 /* ignore */
@@ -1292,9 +1282,9 @@
                 localStorage.setItem(
                     CLASSIFY_LS_KEY,
                     JSON.stringify({
-                        v: 2,
+                        v: 3,
                         groups: classifyGroups.map((g) => ({ id: g.id, name: g.name })),
-                        rowAssignments: { ...rowAssignments }
+                        codeAssignments: { ...codeAssignments }
                     })
                 );
             } catch {
@@ -1729,28 +1719,16 @@
             }
         }
 
-        function pruneRowAssignmentsToLength(n) {
+        function pruneCodeAssignmentsToExistingCodes() {
+            const codes = new Set(
+                originRows.map((r) => assignmentCodeKey(r)).filter((c) => c.length > 0)
+            );
             const next = {};
-            for (const [k, v] of Object.entries(rowAssignments)) {
-                const i = parseInt(k, 10);
-                if (!Number.isInteger(i) || i < 0 || i >= n) continue;
-                next[k] = v;
+            for (const [c, gid] of Object.entries(codeAssignments)) {
+                const ck = String(c).trim();
+                if (codes.has(ck)) next[ck] = gid;
             }
-            rowAssignments = next;
-        }
-
-        /** 删除 origin 中下标 delIdx 后，平移 rowAssignments */
-        function remapRowAssignmentsAfterDelete(delIdx) {
-            if (!Number.isInteger(delIdx) || delIdx < 0) return;
-            const next = {};
-            for (const [k, v] of Object.entries(rowAssignments)) {
-                const old = parseInt(k, 10);
-                if (!Number.isInteger(old)) continue;
-                if (old === delIdx) continue;
-                const newIdx = old < delIdx ? old : old - 1;
-                next[String(newIdx)] = v;
-            }
-            rowAssignments = next;
+            codeAssignments = next;
         }
 
         /** @param {ReturnType<typeof normalizeRow>} r */
@@ -1842,8 +1820,8 @@
         /** 增删改或上传后统一持久化并刷新视图 */
         function persistHoldingsAndRefresh() {
             recomputeHoldingsDerived(originRows);
-            pruneRowAssignmentsToLength(originRows.length);
-            validateRowAssignments();
+            pruneCodeAssignmentsToExistingCodes();
+            validateCodeAssignments();
             saveHoldingsToLocal();
             updateSummary(originRows);
             syncHoldingsTableShell();
@@ -1920,7 +1898,18 @@
                     clearDetailForm();
                     return;
                 }
+                const oldRow = originRows[i];
+                const oldKey = assignmentCodeKey(oldRow);
                 originRows[i] = normalizeRow(raw, i);
+                const newKey = assignmentCodeKey(originRows[i]);
+                if (oldKey !== newKey) {
+                    const gid = oldKey ? codeAssignments[oldKey] : '';
+                    if (oldKey && gid && newKey && !codeAssignments[newKey]) codeAssignments[newKey] = gid;
+                    if (oldKey) {
+                        const stillOld = originRows.some((r, j) => j !== i && assignmentCodeKey(r) === oldKey);
+                        if (!stillOld) delete codeAssignments[oldKey];
+                    }
+                }
                 clearDetailForm();
             } else {
                 const idx = originRows.length;
@@ -1933,7 +1922,6 @@
         function deleteDetailAt(idx) {
             if (!Number.isInteger(idx) || idx < 0 || idx >= originRows.length) return;
             originRows.splice(idx, 1);
-            remapRowAssignmentsAfterDelete(idx);
             reindexOriginRowsInPlace();
             if (editingDetailIdx !== null) {
                 if (editingDetailIdx === idx) clearDetailForm();
@@ -1947,36 +1935,12 @@
             persistHoldingsAndRefresh();
         }
 
-        function validateRowAssignments() {
+        function validateCodeAssignments() {
             const valid = new Set(classifyGroups.map((g) => g.id));
-            for (const k of Object.keys(rowAssignments)) {
-                const gid = rowAssignments[k];
-                if (!gid || !valid.has(gid)) delete rowAssignments[k];
+            for (const k of Object.keys(codeAssignments)) {
+                const gid = codeAssignments[k];
+                if (!gid || !valid.has(gid)) delete codeAssignments[k];
             }
-        }
-
-        /** 从旧版（分组内 codes 列表）迁移到「行 → 分组」 */
-        function applyPendingV1Migration() {
-            if (!pendingV1Migrate || !pendingV1Migrate.length || !originRows.length) return;
-            const nextGroups = [];
-            classifyGroups = [];
-            rowAssignments = {};
-            pendingV1Migrate.forEach((og) => {
-                const id = String(og.id || newGroupId()).trim() || newGroupId();
-                const name = String(og.name || '分组').trim() || '分组';
-                nextGroups.push({ id, name });
-                const codes = Array.isArray(og.codes) ? og.codes.map((c) => String(c).trim()) : [];
-                originRows.forEach((r, i) => {
-                    if (!codes.includes(String(r.code))) return;
-                    if (rowAssignments[String(i)]) return;
-                    rowAssignments[String(i)] = id;
-                });
-            });
-            classifyGroups = nextGroups;
-            pendingV1Migrate = null;
-            validateRowAssignments();
-            pruneRowAssignmentsToLength(originRows.length);
-            writeClassifyStored();
         }
 
         function rowMarketValue(r) {
@@ -2023,7 +1987,7 @@
             return (n >= 0 ? '+¥ ' : '−¥ ') + fmtMoney(Math.abs(n));
         }
 
-        function buildGroupPickerHtml(selectedGroupId, rowIdx) {
+        function buildGroupPickerHtml(selectedGroupId, r) {
             const selId = selectedGroupId && String(selectedGroupId);
             let opts = `<option value=""${!selId ? ' selected' : ''}>未分组</option>`;
             for (const g of classifyGroups) {
@@ -2031,7 +1995,8 @@
                     g.name
                 )}</option>`;
             }
-            return `<select class="group-pick" data-row-idx="${Number(rowIdx)}" aria-label="选择分组">${opts}</select>`;
+            const ck = assignmentCodeKey(r);
+            return `<select class="group-pick" data-holding-code="${escapeHtmlAttr(ck)}" aria-label="选择分组">${opts}</select>`;
         }
 
         function addGroupFromInlineInput() {
@@ -2048,8 +2013,8 @@
         function deleteClassifyGroupById(groupId) {
             const gid = String(groupId || '');
             classifyGroups = classifyGroups.filter((g) => g.id !== gid);
-            for (const k of Object.keys(rowAssignments)) {
-                if (rowAssignments[k] === gid) delete rowAssignments[k];
+            for (const k of Object.keys(codeAssignments)) {
+                if (codeAssignments[k] === gid) delete codeAssignments[k];
             }
             writeClassifyStored();
             refreshGroupingPanels();
@@ -2077,16 +2042,18 @@
             tbody.innerHTML = '';
 
             const un = [];
-            originRows.forEach((r, i) => {
-                if (!rowAssignments[String(i)]) un.push(r);
+            originRows.forEach((r) => {
+                const ck = assignmentCodeKey(r);
+                if (!ck || !codeAssignments[ck]) un.push(r);
             });
 
             const entries = [];
             let orderIdx = 0;
             classifyGroups.forEach((g) => {
                 const rr = [];
-                originRows.forEach((r, i) => {
-                    if ((rowAssignments[String(i)] || '') === g.id) rr.push(r);
+                originRows.forEach((r) => {
+                    const ck = assignmentCodeKey(r);
+                    if (ck && (codeAssignments[ck] || '') === g.id) rr.push(r);
                 });
                 const agg = aggregateMemberRows(rr);
                 entries.push({
@@ -2478,7 +2445,7 @@
             currentSortDir = 'asc';
             groupSummarySortKey = null;
             groupSummarySortDir = 'asc';
-            rowAssignments = {};
+            codeAssignments = {};
             editingDetailIdx = null;
             clearDetailForm();
             const body = document.getElementById('etfHoldingsBody');
@@ -2512,9 +2479,8 @@
             groupSummarySortKey = null;
             groupSummarySortDir = 'asc';
 
-            applyPendingV1Migration();
-            pruneRowAssignmentsToLength(originRows.length);
-            validateRowAssignments();
+            pruneCodeAssignmentsToExistingCodes();
+            validateCodeAssignments();
 
             updateSummary(originRows);
             if (fileName) setSourceFile(fileName);
@@ -2591,8 +2557,9 @@
                         : Number.isFinite(r.pnlPct) && r.pnlPct < 0
                           ? 'pct-down-num mono'
                           : 'mono';
-                const gid = rowAssignments[String(r._idx)] || '';
-                const pickCell = buildGroupPickerHtml(gid, r._idx);
+                const ck = assignmentCodeKey(r);
+                const gid = ck ? codeAssignments[ck] || '' : '';
+                const pickCell = buildGroupPickerHtml(gid, r);
                 tr.innerHTML = buildHoldingRowCellsHtml(r, pnlClass, pickCell);
                 body.appendChild(tr);
             });
@@ -2619,7 +2586,8 @@
                 case 'index':
                     return row._idx;
                 case 'group': {
-                    const gid = rowAssignments[String(row._idx)] || '';
+                    const ck = assignmentCodeKey(row);
+                    const gid = ck ? codeAssignments[ck] || '' : '';
                     const g = classifyGroups.find((x) => x.id === gid);
                     return g ? g.name : '';
                 }
@@ -2765,17 +2733,17 @@
                 holdingsBody.addEventListener('change', (e) => {
                     const t = e.target;
                     if (!t || !t.classList.contains('group-pick')) return;
-                    const idx = parseInt(t.getAttribute('data-row-idx') || '-1', 10);
-                    if (!Number.isInteger(idx) || idx < 0) return;
-                    const key = String(idx);
+                    const key = String(t.getAttribute('data-holding-code') || '').trim();
+                    if (!key) return;
                     const val = String(t.value || '').trim();
                     if (!val) {
-                        delete rowAssignments[key];
+                        delete codeAssignments[key];
                     } else {
-                        rowAssignments[key] = val;
+                        codeAssignments[key] = val;
                     }
-                    validateRowAssignments();
+                    validateCodeAssignments();
                     writeClassifyStored();
+                    renderTable();
                     renderGroupSummaryTable();
                 });
             }
