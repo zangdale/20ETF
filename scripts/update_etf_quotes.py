@@ -5,7 +5,7 @@
 
 口径：
   - 现价：push2 行情接口最新价（f2）。
-  - 某编号拉价失败时：该行「现价」「市值」保持 JSON 原样不改动；stderr 打印告警。
+  - 某编号拉价失败或现价≤0（或非有限数）时：该行「现价」「市值」保持 JSON 原样不改动；stderr 打印告警。
   - 仓位：始终按全表各行当前市值合计重算（含未更新行沿用原市值）。
 
 用法:
@@ -162,6 +162,14 @@ def log_price_miss(code: str, rows: list[dict[str, Any]]) -> None:
     print(f"warn: 编号 {code} 现价获取失败，跳过更新现价/市值；{name_part}", file=sys.stderr)
 
 
+def log_invalid_price(code: str, px: float, rows: list[dict[str, Any]]) -> None:
+    hits = [r for r in rows if str(r.get("编号", "")).strip() == code]
+    names = [str(r.get("名称", "")).strip() or "(无名称)" for r in hits]
+    n = len(hits)
+    name_part = f"名称={names[0]}" if n == 1 else f"共 {n} 行: " + " | ".join(names)
+    print(f"warn: 编号 {code} 现价无效（{px}），跳过更新现价/市值；{name_part}", file=sys.stderr)
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="刷新 etf.json 现价、市值、仓位")
     p.add_argument(
@@ -205,18 +213,27 @@ def main() -> None:
     uniq = sorted(set(codes))
     missing = [c for c in uniq if c not in price_by_code]
 
+    def price_ok(px: float) -> bool:
+        return math.isfinite(px) and px > 0
+
+    invalid_price_codes = [c for c in uniq if c in price_by_code and not price_ok(price_by_code[c])]
+
     updated_rows = 0
     for r in rows:
         code = str(r["编号"]).strip()
         hold = float(r["持仓"])
         if code in price_by_code:
             px = price_by_code[code]
+            if not price_ok(px):
+                continue
             r["现价"] = round_price(px)
             r["市值"] = round_mv(hold * px)
             updated_rows += 1
 
     for c in missing:
         log_price_miss(c, rows)
+    for c in invalid_price_codes:
+        log_invalid_price(c, price_by_code[c], rows)
 
     mvs: list[float] = []
     for i, r in enumerate(rows, start=1):
